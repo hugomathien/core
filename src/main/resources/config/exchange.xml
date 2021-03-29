@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+	    http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+		http://www.springframework.org/schema/context
+		http://www.springframework.org/schema/context/spring-context-4.3.xsd"
+	xmlns:context="http://www.springframework.org/schema/context">
+
+
+	<bean id="euronext-open" class="finance.springBean.TradingSession"
+		scope="singleton">
+		<constructor-arg value="08:00:00"></constructor-arg>
+		<constructor-arg value="16:35:00"></constructor-arg>
+		<property name="tradingPhase" value="OPENING_AUCTION" />
+	</bean>
+	<bean id="euronext-continuous"
+		class="finance.springBean.TradingSession" scope="singleton">
+		<constructor-arg value="08:00:00"></constructor-arg>
+		<constructor-arg value="16:20:00"></constructor-arg>
+		<property name="tradingPhase" value="CONTINUOUS_TRADING" />
+	</bean>
+	<bean id="euronext-close"
+		class="finance.springBean.TradingSession" scope="singleton">
+		<constructor-arg value="16:20:00"></constructor-arg>
+		<constructor-arg value="16:35:00"></constructor-arg>
+		<property name="tradingPhase" value="CLOSING_AUCTION" />
+	</bean>
+
+	<bean id="XPAR" class="finance.springBean.Exchange"
+		scope="singleton">
+		<property name="mic" value="XPAR" />
+		<property name="dateTimeZone" value="Europe/Paris" />
+		<property name="mainTradingCurrency" value="EUR" />
+		<property name="countryIso" value="FR" />
+		<property name="tradingSessions">
+			<map>
+				<entry key="OPENING_AUCTION" value-ref="euronext-open" />
+				<entry key="CONTINUOUS_TRADING" value-ref="euronext-continuous" />
+				<entry key="CLOSING_AUCTION" value-ref="euronext-close" />
+			</map>
+		</property>
+
+	</bean>
+	
+	
+
+</beans>
+	
