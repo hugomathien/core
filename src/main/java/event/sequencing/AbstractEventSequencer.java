@@ -83,8 +83,6 @@ public abstract class AbstractEventSequencer<S extends Sequenceable> {
 		else
 			endZdt = endDate.atTime(endTime).atZone(zoneId);
 
-		//startZdt = BartDateUtils.weekday(startZdt);
-		//endZdt = BartDateUtils.weekday(endZdt);
 		this.initialWindowLookBack = initialWindowLookBack.compareTo(windowLookBack) > 0 ? initialWindowLookBack : windowLookBack;
 		this.clock.setStart(startZdt);
 		this.clock.setEnd(endZdt);
