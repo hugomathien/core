@@ -9,28 +9,27 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import config.CoreConfig;
-import eventsequencers.Sequenceable;
+import event.sequencing.Sequenceable;
 import exceptions.DataQueryException;
 import exceptions.DataServiceStartException;
-import finance.identifiers.IIdentifier;
+import finance.identifiers.Identifier;
 import finance.identifiers.Identifier;
 import finance.identifiers.IdentifierType;
 import finance.instruments.IInstrument;
 import finance.instruments.IPortfolio;
 import finance.instruments.InstrumentType;
 import marketdata.field.Field;
-import marketdata.field.FieldEnum;
 import marketdata.services.bloomberg.enumeration.RequestOverrides;
 import static marketdata.services.base.RequestParameters.*;
 
@@ -41,7 +40,7 @@ public class DataRequest<K> implements Sequenceable {
 	private InstrumentType instrumentType;
 	private IdentifierType identifierType = CoreConfig.PRIMARY_IDENTIFIER_TYPE;
 	private HashSet<IPortfolio> universe;
-	private HashSet<IIdentifier> identifiers;
+	private HashSet<Identifier> identifiers;
 	private ArrayList<Field> fields;
 	private Map<RequestParameters,Object> parameters;
 	private Map<RequestOverrides,Object> overrides;
@@ -115,7 +114,7 @@ public class DataRequest<K> implements Sequenceable {
 		this.identifierType = identifierType;
 	}
 
-	public void setIdentifiers(HashSet<IIdentifier> identifiers) {
+	public void setIdentifiers(HashSet<Identifier> identifiers) {
 		this.identifiers = identifiers;
 	}
 
@@ -192,25 +191,20 @@ public class DataRequest<K> implements Sequenceable {
 		this.instrumentsCompletionCount += 1;
 	}
 
-	public Set<IIdentifier> getIdentifiers() {
-		for(IPortfolio iPortfolio : this.universe) {
-			this.identifiers.addAll(iPortfolio.getComposition()
-					.stream()
-					.map(i -> i.getIdentifier(this.identifierType))
-					.collect(Collectors.toSet()));
-		}
-
-		if(this.identifiers.isEmpty() && this.instrumentType != null && this.identifierType != null)
-			this.identifiers.addAll(CoreConfig.services().instrumentFactory().getIdentifierSet().stream().filter(i -> i.getType().equals(this.identifierType)
-					&& i.getInstrument().getInstrumentType().equals(this.instrumentType)).collect(Collectors.toSet()));
-		else if(this.identifiers.isEmpty() && this.instrumentType != null)
-			this.identifiers.addAll(CoreConfig.services().instrumentFactory().getIdentifierSet().stream().filter(i -> i.getInstrument().getInstrumentType().equals(this.instrumentType)).collect(Collectors.toSet()));
-		else if(this.identifiers.isEmpty() && this.identifierType != null)
-			this.identifiers.addAll(CoreConfig.services().instrumentFactory().getIdentifierSet().stream().filter(i -> i.getType().equals(this.identifierType)).collect(Collectors.toSet()));
-		else if(this.identifiers.isEmpty())
-			this.identifiers.addAll(CoreConfig.services().instrumentFactory().getIdentifierSet().stream().collect(Collectors.toSet()));
-
-
+	public Set<Identifier> getIdentifiers() {
+		return this.identifiers;
+	}
+	
+	public Set<Identifier> initIdentifiers() {
+		Set<Identifier> universeIdentifiers = 
+				CoreConfig
+				.services()
+				.instrumentFactory()
+				.identifiersForPortfolioUniverseAndInstrumentType(universe,instrumentType,identifierType)
+				.collect(Collectors.toSet());		
+		this.identifiers.addAll(universeIdentifiers);
+		
+		// TODO: if there is no universe and no identifiers should we query the entire platform universe ?
 		return this.identifiers;
 	}
 
@@ -230,6 +224,7 @@ public class DataRequest<K> implements Sequenceable {
 	}
 
 	public K query(DataServiceEnum serviceName, RequestType requestType) throws DataQueryException,DataServiceStartException {
+		initIdentifiers();
 		if(this.subscribe) {
 			subscribe(serviceName);
 			return null;
@@ -289,7 +284,7 @@ public class DataRequest<K> implements Sequenceable {
 		private IdentifierType identifierType = CoreConfig.PRIMARY_IDENTIFIER_TYPE;
 		private InstrumentType instrumentType;
 		private HashSet<IPortfolio> universe;
-		private HashSet<IIdentifier> identifiers;
+		private HashSet<Identifier> identifiers;
 		private ArrayList<Field> fields;
 		private Map<RequestParameters,Object> parameters;
 		private Map<RequestOverrides,Object> overrides;
@@ -300,12 +295,14 @@ public class DataRequest<K> implements Sequenceable {
 			universe = new HashSet<IPortfolio>();
 			parameters = new HashMap<RequestParameters,Object>();
 			overrides = new HashMap<RequestOverrides,Object>();
-			identifiers = new HashSet<IIdentifier>();
+			identifiers = new HashSet<Identifier>();
 			fields = new ArrayList<Field>();
 			universe = new HashSet<IPortfolio>();
 		}
 
 		public Builder<K> universe(String... portfolios) {
+			if (portfolios == null)
+				return this;
 			for(String portfolio : portfolios) {
 				if(CoreConfig.services().instrumentFactory().hasInstrument(portfolio)) {
 					IPortfolio iPortfolio = (IPortfolio) CoreConfig.services().instrumentFactory().getInstrument(portfolio);
@@ -316,33 +313,34 @@ public class DataRequest<K> implements Sequenceable {
 		}
 
 		public Builder<K> identifiers(Identifier... identifiers) {
-			List<IIdentifier> identifiersList = Arrays.asList(identifiers);
+			List<Identifier> identifiersList = Arrays.asList(ArrayUtils.nullToEmpty(identifiers,Identifier[].class)) ;			
 			this.identifiers.addAll(identifiersList);
 			return this;
 		}
 
 		public Builder<K> identifiers(Collection<? extends Identifier> identifiers) {
-			this.identifiers.addAll(identifiers);
+			this.identifiers.addAll(CollectionUtils.emptyIfNull(identifiers));
 			return this;
 		}
 
 		public Builder<K> identifiers(IInstrument... instruments) {
-			List<IInstrument> instrumentList = Arrays.asList(instruments);
-			List<IIdentifier> identifiersList = instrumentList.stream().flatMap(
+			List<IInstrument> instrumentList = Arrays.asList(ArrayUtils.nullToEmpty(instruments,IInstrument[].class)) ;			
+			List<Identifier> identifiersList = instrumentList.stream().flatMap(
 					x -> x.getIdentifiers().stream().filter(i -> i.getType().equals(identifierType))).collect(Collectors.toList());
 			this.identifiers.addAll(identifiersList);
 			return this;
 		}
 
+		
 		public Builder<K> identifiers(Set<? extends IInstrument> instruments) {
-			List<IIdentifier> identifiersList = instruments.stream().flatMap(
+			List<Identifier> identifiersList = CollectionUtils.emptyIfNull(instruments).stream().flatMap(
 					x -> x.getIdentifiers().stream().filter(i -> i.getType().equals(identifierType))).collect(Collectors.toList());
 			this.identifiers.addAll(identifiersList);
 			return this;
 		}
 
 		public Builder<K> identifiers(List<? extends IInstrument> instruments) {
-			List<IIdentifier> identifiersList = instruments.stream().flatMap(
+			List<Identifier> identifiersList = CollectionUtils.emptyIfNull(instruments).stream().flatMap(
 					x -> x.getIdentifiers().stream().filter(i -> i.getType().equals(identifierType))).collect(Collectors.toList());
 			this.identifiers.addAll(identifiersList);
 			return this;
@@ -359,19 +357,18 @@ public class DataRequest<K> implements Sequenceable {
 		}
 
 		public Builder<K> identifiers(IdentifierType identifierType, IInstrument[] instrumentsNames) {
-			List<IInstrument> instrumentList = Arrays.asList(instrumentsNames);
-			List<IIdentifier> identifiersList = instrumentList.stream().flatMap(
+			List<IInstrument> instruments = Arrays.asList(ArrayUtils.nullToEmpty(instrumentsNames,IInstrument[].class)) ;			
+			List<Identifier> identifiersList = instruments.stream().flatMap(
 					x -> x.getIdentifiers().stream().filter(i -> i.getType().equals(identifierType))).collect(Collectors.toList());
 			this.identifiers.addAll(identifiersList);
 			return this;
 		}
 
-		public Builder<K> identifiers(IdentifierType identifierType, InstrumentType instrumentType,String... instrumentsNames) {
-			if(instrumentsNames.length == 0 || instrumentType == null)
-				return this;
+		public Builder<K> identifiers(IdentifierType identifierType, InstrumentType instrumentType,String... instruments) {
+			instruments = ArrayUtils.nullToEmpty(instruments);
 			Set<IInstrument> instrumentSet = CoreConfig.services().instrumentFactory()
-					.makeMultipleInstrument(instrumentType, identifierType, instrumentsNames);
-			List<IIdentifier> identifiersList = instrumentSet.stream().flatMap(
+					.makeMultipleInstrument(instrumentType, identifierType, instruments);
+			List<Identifier> identifiersList = instrumentSet.stream().flatMap(
 					x -> x.getIdentifiers().stream().filter(i -> i.getType().equals(identifierType))).collect(Collectors.toList());
 
 			this.identifiers.addAll(identifiersList);
@@ -380,37 +377,29 @@ public class DataRequest<K> implements Sequenceable {
 
 		public Builder<K> identifiers(IdentifierType identifierType, InstrumentType instrumentType,Collection<String> instrumentsNames) {
 			Set<IInstrument> instruments = CoreConfig.services().instrumentFactory()
-					.makeMultipleInstrument(instrumentType, identifierType, instrumentsNames);
-			List<IIdentifier> identifiersList = instruments.stream().flatMap(
+					.makeMultipleInstrument(instrumentType, identifierType, CollectionUtils.emptyIfNull(instrumentsNames));
+			List<Identifier> identifiersList = instruments.stream().flatMap(
 					x -> x.getIdentifiers().stream().filter(i -> i.getType().equals(identifierType))).collect(Collectors.toList());
 
 			this.identifiers.addAll(identifiersList);
 			return this;
 		}
 
-		public Builder<K> fields(FieldEnum... fields) {
-			List<Field> fieldList = Arrays.asList(fields);
-			this.fields.addAll(fieldList);
-			return this;
-		}
-
 		public Builder<K> fields(Field... fields) {
-			List<Field> fieldList = Arrays.asList(fields);
+			List<Field> fieldList = Arrays.asList(ArrayUtils.nullToEmpty(fields,Field[].class));
 			this.fields.addAll(fieldList);
 			return this;
 		}
 
 		public Builder<K> fields(String... fields) {
-			if(fields == null)
-				return this;
-			Set<String> fieldStringSet = new LinkedHashSet<String>(Arrays.asList(fields));
-			List<Field> fieldList = fieldStringSet.stream().map(x -> Field.get(x)).collect(Collectors.toList());
+			List<String> fieldStringList = Arrays.asList(ArrayUtils.nullToEmpty(fields)) ;			
+			List<Field> fieldList = fieldStringList.stream().map(x -> Field.get(x)).collect(Collectors.toList());
 			this.fields.addAll(fieldList);
 			return this;
 		}
 
 		public Builder<K> fields(Collection<? extends Field> fields) {
-			this.fields.addAll(fields);
+			this.fields.addAll(CollectionUtils.emptyIfNull(fields));
 			return this;
 		}
 

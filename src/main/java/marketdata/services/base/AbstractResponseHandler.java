@@ -4,7 +4,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import events.MarketDataEventFactory;
+import event.events.MarketDataEventFactory;
 import finance.instruments.IInstrument;
 import finance.instruments.InstrumentFactory;
 import marketdata.field.Field;

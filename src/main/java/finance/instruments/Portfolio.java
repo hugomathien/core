@@ -4,15 +4,16 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.TreeSet;
 
 public class Portfolio implements IPortfolio {
 	private HashMap<IInstrument,Double> weights;
-	private List<IInstrument> composition;
+	private TreeSet<IInstrument> composition;
 	private Instant lastCompositionUpdate;
 	
 	public Portfolio() {
 		this.weights = new HashMap<IInstrument,Double>();
-		this.composition = new LinkedList<IInstrument>();
+		this.composition = new TreeSet<IInstrument>();
 	}
 	
 	public HashMap<IInstrument, Double> getWeights() {
@@ -23,11 +24,11 @@ public class Portfolio implements IPortfolio {
 		this.weights = weights;
 	}
 	
-	public List<IInstrument> getComposition() {
+	public TreeSet<IInstrument> getComposition() {
 		return composition;
 	}
 	
-	public void setComposition(List<IInstrument> composition) {
+	public void setComposition(TreeSet<IInstrument> composition) {
 		this.composition = composition;
 	}
 

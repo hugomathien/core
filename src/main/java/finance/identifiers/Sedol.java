@@ -1,7 +1,7 @@
 package finance.identifiers;
 
 import finance.instruments.IInstrument;
-import finance.springBean.Exchange;
+import finance.misc.Exchange;
 import marketdata.services.bloomberg.enumeration.TickerSuffix;
 
 public class Sedol extends Identifier implements IBloombergIdentifier {

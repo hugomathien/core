@@ -9,27 +9,26 @@
 	xmlns:context="http://www.springframework.org/schema/context">
 
 
-	<bean id="euronext-open" class="finance.springBean.TradingSession"
+	<bean id="euronext-open" class="finance.misc.TradingSession"
 		scope="singleton">
 		<constructor-arg value="08:00:00"></constructor-arg>
 		<constructor-arg value="16:35:00"></constructor-arg>
 		<property name="tradingPhase" value="OPENING_AUCTION" />
 	</bean>
 	<bean id="euronext-continuous"
-		class="finance.springBean.TradingSession" scope="singleton">
+		class="finance.misc.TradingSession" scope="singleton">
 		<constructor-arg value="08:00:00"></constructor-arg>
 		<constructor-arg value="16:20:00"></constructor-arg>
 		<property name="tradingPhase" value="CONTINUOUS_TRADING" />
 	</bean>
 	<bean id="euronext-close"
-		class="finance.springBean.TradingSession" scope="singleton">
+		class="finance.misc.TradingSession" scope="singleton">
 		<constructor-arg value="16:20:00"></constructor-arg>
 		<constructor-arg value="16:35:00"></constructor-arg>
 		<property name="tradingPhase" value="CLOSING_AUCTION" />
 	</bean>
 
-	<bean id="XPAR" class="finance.springBean.Exchange"
-		scope="singleton">
+	<bean id="XPAR" class="finance.misc.Exchange" scope="singleton">
 		<property name="mic" value="XPAR" />
 		<property name="dateTimeZone" value="Europe/Paris" />
 		<property name="mainTradingCurrency" value="EUR" />

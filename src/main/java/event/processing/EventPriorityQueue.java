@@ -1,4 +1,4 @@
-package eventprocessors;
+package event.processing;
 
 import java.util.Comparator;
 import java.util.PriorityQueue;
@@ -8,7 +8,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
-import events.Event;
+import event.events.Event;
 
 @Service
 @Scope("singleton")

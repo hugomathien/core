@@ -1,13 +1,12 @@
-package finance.springBean;
+package finance.misc;
 
 import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
 
 import config.CoreConfig;
-import events.TradingSessionEvent;
+import event.events.TradingSessionEvent;
 import exceptions.TradingSessionMissingException;
-import finance.tradingcycle.TradingPhaseEnum;
 
 public class Exchange {
 	private String mic;

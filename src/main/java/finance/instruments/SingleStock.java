@@ -6,7 +6,7 @@ import finance.identifiers.IdentifierType;
 
 
 public class SingleStock extends Instrument {
-
+	
 	public SingleStock() {
 		this.setInstrumentType(InstrumentType.SingleStock);
 	}

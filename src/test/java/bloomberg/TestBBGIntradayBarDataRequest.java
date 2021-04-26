@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
+import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,16 +23,16 @@ import marketdata.services.base.DataRequest;
 import marketdata.services.base.DataServiceEnum;
 import marketdata.services.base.RequestParameters;
 import marketdata.services.base.RequestType;
-import marketdata.services.bloomberg.services.BBGReferenceDataService;
+import marketdata.services.bloomberg.BBGReferenceDataService;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = CoreConfig.class)
 public class TestBBGIntradayBarDataRequest {
 
-	private DataRequest request;
+	private DataRequest<Object> request;
 
-	@Test
-	public void testSampleService() throws DataServiceStartException, DataQueryException {
+	@Before
+	public void setUp() throws DataServiceStartException, DataQueryException {
 		request = new DataRequest.Builder<>()
 		.dataService(DataServiceEnum.BLOOMBERG)
 		.backfill(false)
@@ -39,13 +41,48 @@ public class TestBBGIntradayBarDataRequest {
 		.parameters(RequestParameters.endDateTime, ZonedDateTime.of(LocalDateTime.of(2021, 3, 25, 11, 30, 0), ZoneId.of("Europe/London")))
 		.parameters(RequestParameters.interval, 1)
 		.identifierType(IdentifierType.TICKER)
-		.identifiers(InstrumentType.SingleStock, new String[]{"FPSD FP","VOD LN"})
+		.identifiers(InstrumentType.SingleStock, new String[]{"FP FP","VOD LN"})
 		.requestType(RequestType.IntradayBarRequest)
 		.build();
 		
-		request.query();
+		request.query();		
+		CoreConfig.services().run();
+	}
+	
+	
+	@Test
+	public void testSpotDataFromBar() {
+		int totalFieldMapSize = CoreConfig.services().instrumentFactory()
+				.getInstrument("FP FP")
+				.getMarketData()
+				.getSpot()
+				.getFieldsMap()
+				.size();
+
+		int vodafoneFieldMap = CoreConfig.services().instrumentFactory()
+				.getInstrument("VOD LN")
+				.getMarketData()
+				.getSpot()
+				.getFieldsMap()
+				.size();
+
+		Assert.assertEquals(totalFieldMapSize,1);
+		Assert.assertEquals(vodafoneFieldMap,1);
 		
-		System.out.println("completed");
+		
+		System.out.println("FP FP " + CoreConfig.services().instrumentFactory()
+				.getInstrument("FP FP")
+				.getMarketData()
+				.getSpot()
+				.getFieldsMap()
+				.toString());
+		
+		System.out.println("VOD LN" + CoreConfig.services().instrumentFactory()
+				.getInstrument("VOD LN")
+				.getMarketData()
+				.getSpot()
+				.getFieldsMap()
+				.toString());
 	}
 
 }

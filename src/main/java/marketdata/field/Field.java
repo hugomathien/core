@@ -1,15 +1,20 @@
 package marketdata.field;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.HashMap;
+import marketdata.services.bloomberg.BBGService;
+import org.apache.spark.sql.types.DataType;
+import org.apache.spark.sql.types.DataTypes;
 
+import com.bloomberglp.blpapi.Datetime;
 import com.bloomberglp.blpapi.Element;
 
 import config.CoreConfig;
-import finance.springBean.Exchange;
-import finance.springBean.TradingSession;
-import finance.tradingcycle.TradingPhaseEnum;
+import finance.misc.Exchange;
+import finance.misc.TradingPhaseEnum;
+import finance.misc.TradingSession;
 import marketdata.services.base.DataServiceEnum;
 import utils.PriceCheck;
 
@@ -36,7 +41,7 @@ public interface Field {
 				field = FieldCustom.customFieldMap.get(name);
 			}
 			else {
-				field = new FieldCustom(name,String.class); // TODO default to string type is it the best ?
+				field = new FieldCustom(name,Double.class); // TODO default to double type is it the best ?
 			}
 			return field;
 		}
@@ -59,6 +64,11 @@ public interface Field {
 			String val = value.getValueAsString();
 			return type().cast(val);
 		}
+		else if(type() == LocalDate.class) {
+			Datetime val = value.getValueAsDate();
+			LocalDate ld = BBGService.convertBbgToJavaLocalDate(val);
+			return type().cast(ld);
+		}
 		
 		return value.toString();
 	}
@@ -71,6 +81,7 @@ public interface Field {
 		if(val instanceof char[])
 			return String.valueOf((char[]) val);
 		try {
+			
 			if(this.type().equals(Long.class))
 				return (val instanceof Double) ? ((Double) val).longValue() : Long.valueOf(val.toString());
 			else if(this.type().equals(Integer.class))
@@ -93,7 +104,7 @@ public interface Field {
 		return val;
 	}
 	
-	public default ZonedDateTime assignTimeStamp(LocalDate ld,Exchange exchange) {
+	public default ZonedDateTime assignTimeStamp(LocalDate ld,Exchange exchange) throws Exception {
 		if(this.tradingPhase() == null)
 			return ld.atStartOfDay(CoreConfig.GLOBAL_ZONE_ID);
 		TradingSession tradingSession = exchange.getTradingSession(this.tradingPhase()); 
@@ -110,6 +121,33 @@ public interface Field {
 			return name();
 	}
 	
+	public default DataType sparkDataType() {
+		if(type() == Double.class) {
+			return DataTypes.DoubleType;
+		}
+		else if(type() == Integer.class) {
+			return DataTypes.IntegerType;
+		}
+		else if(type() == Long.class) {
+			return DataTypes.LongType;
+		}
+		else if(type() == String.class) {
+			return DataTypes.StringType;
+		}
+		else if(type() == Float.class) {
+			return DataTypes.FloatType;
+		}
+		else if(type() == LocalDate.class) {
+			return DataTypes.DateType;
+		}
+		else if(type() == Instant.class) {
+			return DataTypes.TimestampType;
+		}
+		else {
+			return DataTypes.StringType;
+		}
+		
+	}
 	
 	
 }

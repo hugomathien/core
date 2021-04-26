@@ -2,7 +2,7 @@ package marketdata.field;
 
 import java.util.HashMap;
 
-import finance.tradingcycle.TradingPhaseEnum;
+import finance.misc.TradingPhaseEnum;
 import marketdata.services.base.DataServiceEnum;
 
 public class FieldCustom implements Field {

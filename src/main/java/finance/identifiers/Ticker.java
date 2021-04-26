@@ -10,7 +10,7 @@ import finance.instruments.Future;
 import finance.instruments.IInstrument;
 import finance.instruments.Index;
 import finance.instruments.SingleStock;
-import finance.springBean.Exchange;
+import finance.misc.Exchange;
 import marketdata.services.bloomberg.enumeration.TickerSuffix;
 
 public class Ticker extends Identifier implements IBloombergIdentifier{

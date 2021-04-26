@@ -1,9 +1,13 @@
 package marketdata.services.bloomberg.responsehandler;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -20,11 +24,12 @@ import com.bloomberglp.blpapi.MessageIterator;
 import com.bloomberglp.blpapi.Name;
 import com.bloomberglp.blpapi.Request;
 import com.bloomberglp.blpapi.Session;
+import com.bloomberglp.blpapi.impl.iF;
 
 import config.CoreConfig;
-import eventprocessors.EventPriorityQueue;
-import events.MarketDataEventFactory;
-import events.PortfolioCompositionEvent;
+import event.events.MarketDataEventFactory;
+import event.events.PortfolioCompositionEvent;
+import event.processing.EventPriorityQueue;
 import finance.identifiers.IdentifierType;
 import finance.instruments.IInstrument;
 import finance.instruments.IPortfolio;
@@ -36,9 +41,9 @@ import marketdata.field.Field;
 import marketdata.services.base.AbstractResponseHandler;
 import marketdata.services.base.DataRequest;
 import marketdata.services.base.DataServiceEnum;
+import marketdata.services.bloomberg.BBGReferenceDataService;
 import marketdata.services.bloomberg.enumeration.RequestOverrides;
 import marketdata.services.bloomberg.enumeration.ResponseType;
-import marketdata.services.bloomberg.services.BBGReferenceDataService;
 
 @Service
 @Scope("singleton")
@@ -151,11 +156,11 @@ public class BBGReferenceResponseHandler extends AbstractResponseHandler<BBGRefe
 				break;
 			}
 
-			try {
-				message.print(System.out);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			// TODO: add property to print raw message out
+			/*
+			 * try { message.print(System.out); } catch (IOException e) {
+			 * e.printStackTrace(); }
+			 */
 		}
 
 		if(request.getInstrumentsCompletionCount() >= request.getIdentifiers().size())
@@ -170,9 +175,11 @@ public class BBGReferenceResponseHandler extends AbstractResponseHandler<BBGRefe
 	}
 
 	private void onResponseError(Request bbgrequest, ResponseType responseType, DataRequest<Object> request) {
-		Element security = bbgrequest.getElement("security");
-		IInstrument instrument = this.getDataService().getInstrumentFromBloombergResponse(security.getValueAsString());
-		request.getInstrumentsQueryError().add(instrument);
+		if(bbgrequest.hasElement("security")) {		
+			Element security = bbgrequest.getElement("security");
+			IInstrument instrument = this.getDataService().getInstrumentFromBloombergResponse(security.getValueAsString());
+			request.getInstrumentsQueryError().add(instrument);
+		}
 		request.incrementCompletionCount();
 	}
 
@@ -185,7 +192,11 @@ public class BBGReferenceResponseHandler extends AbstractResponseHandler<BBGRefe
 			String security = securityData.getElementAsString("security");		
 			IInstrument instrument = this.getDataService().getInstrumentFromBloombergResponse(security);
 			if (!securityData.hasElement("securityError")) {
+				
+				List<Field> validFields = this.filterFieldsForExceptions(securityData, request.getFields());
+
 				Element fieldData = securityData.getElement("fieldData");
+
 				for (int j = 0; j < fieldData.numElements(); ++j) {
 					Element item = fieldData.getElement(j);
 					Instant timestamp = ZonedDateTime.now().toInstant();
@@ -194,8 +205,12 @@ public class BBGReferenceResponseHandler extends AbstractResponseHandler<BBGRefe
 						timestamp = ldOverride.atStartOfDay(CoreConfig.GLOBAL_ZONE_ID).toInstant();
 					}
 					
-					Field field = request.getFields().get(j); // TODO: cant do this if there is a fieldExceptions as ordering is lost.
-					
+					Field field = validFields.get(j); 
+					Optional<Field> requestfield = validFields.stream().filter(f -> f.name(DataServiceEnum.BLOOMBERG).equals(item.name().toString())).findFirst();
+					if(requestfield.isPresent()) // usually because of an override the query uses a custom field that does not have a bloomberg match.
+						field = requestfield.get();
+						
+
 					if(item.numValues() > 1) { // We're dealing with an array, equivalent to a BDS call
 						processReferenceDataResponseArray(timestamp,item,request,instrument,field);
 					}
@@ -221,22 +236,22 @@ public class BBGReferenceResponseHandler extends AbstractResponseHandler<BBGRefe
 			request.incrementCompletionCount();
 		}
 	}
-	
+
 	private void processReferenceDataResponseArray(Instant timestamp,Element item,DataRequest<Object> request,IInstrument instrument,Field field) {
 		String itemName = item.name().toString();
 		for (int k = 0; k < item.numValues(); ++k) {
 			Element subitem = item.getValueAsElement(k);				
 			switch(itemName) {
-				case "INDX_MWEIGHT_HIST": 
-					String security = subitem.getElementAsString("Index Member");
-					IInstrument member = factory.makeInstrument(InstrumentType.SingleStock, IdentifierType.TICKER, security); // TODO: Member could be another asset type or a cash component
-					Double weight = subitem.getElementAsFloat64("Percent Weight");
-					IPortfolio portfolio = (IPortfolio) instrument;					
-					PortfolioCompositionEvent event = new PortfolioCompositionEvent(timestamp, portfolio, member,weight);	
-					queue.add(event);
-					break;
+			case "INDX_MWEIGHT_HIST": 
+				String security = subitem.getElementAsString("Index Member");
+				IInstrument member = factory.makeInstrument(InstrumentType.SingleStock, IdentifierType.TICKER, security); // TODO: Member could be another asset type or a cash component
+				Double weight = subitem.getElementAsFloat64("Percent Weight");
+				IPortfolio portfolio = (IPortfolio) instrument;					
+				PortfolioCompositionEvent event = new PortfolioCompositionEvent(timestamp, portfolio, member,weight);	
+				queue.add(event);
+				break;
 			}
-			
+
 		}
 	}
 
@@ -244,19 +259,33 @@ public class BBGReferenceResponseHandler extends AbstractResponseHandler<BBGRefe
 		Element securityData = msg.getElement("securityData");
 		String security = securityData.getElementAsString("security");		
 		IInstrument instrument = this.getDataService().getInstrumentFromBloombergResponse(security);
+		
 		if (!securityData.hasElement("securityError")) {
 			request.getInstrumentsQuerySuccess().add(instrument);
-			Element fieldDataArray = securityData.getElement("fieldData");
+			Element fieldDataArray = securityData.getElement("fieldData");			
+			List<Field> validFields = this.filterFieldsForExceptions(securityData, request.getFields());
+			
 			for (int j = 0; j < fieldDataArray.numValues(); ++j) {
 				Element fieldData = fieldDataArray.getValueAsElement(j);
 				Element dateField = fieldData.getElement(0);
 				Datetime date = dateField.getValueAsDate();								
-				LocalDate ld = this.getDataService().convertBbgToJavaLocalDate(date);
-
+				LocalDate ld = this.getDataService().convertBbgToJavaLocalDate(date);				
+				
 				for (int k = 1; k < fieldData.numElements(); ++k) {
 					Element fieldElement = fieldData.getElement(k);
-					Field field = request.getFields().get(k-1);
-					Instant timestamp = field.assignTimeStamp(ld,((Instrument) instrument).getExchange()).toInstant();
+					Field field = validFields.get(k-1); 
+					
+					Optional<Field> requestfield = validFields.stream().filter(f -> f.name(DataServiceEnum.BLOOMBERG).equals(fieldElement.name().toString())).findFirst();
+					if(requestfield.isPresent()) // when false it's the query uses a custom field that does not have a bloomberg match (happens when using overrides).
+						field = requestfield.get();
+					
+					Instant timestamp;
+					try {
+						timestamp = field.assignTimeStamp(ld,((Instrument) instrument).getExchange()).toInstant();
+					}
+					catch(Exception e) {
+						timestamp = ld.atStartOfDay(CoreConfig.GLOBAL_ZONE_ID).toInstant();
+					}
 					Object value = field.getValueFromBloombergElement(fieldElement);
 
 					marketDataEventFactory.publishToEventQueue(
@@ -287,6 +316,7 @@ public class BBGReferenceResponseHandler extends AbstractResponseHandler<BBGRefe
 
 		for (int i = 0; i < numItems; ++i) {
 			Element item = data.getValueAsElement(i);
+			Element elval = item.getElement("value");
 			Datetime bbgtimestamp = item.getElementAsDate("time");
 			String type = item.getElementAsString("type");
 			int size = item.getElementAsInt32("size");
@@ -296,7 +326,7 @@ public class BBGReferenceResponseHandler extends AbstractResponseHandler<BBGRefe
 			}
 
 			Field field = Field.get(type);
-			Object value = field.getValueFromBloombergElement(item);
+			Object value = field.getValueFromBloombergElement(elval);
 
 			Instant timestamp = this.dataService.convertBbgToJavaInstant(bbgtimestamp);
 			marketDataEventFactory.publishToEventQueue(
@@ -328,6 +358,7 @@ public class BBGReferenceResponseHandler extends AbstractResponseHandler<BBGRefe
 				Element item;
 				switch(field.name()) {
 				case "PX_LAST":
+				case "TRADE":
 					item = bar.getElement("close");
 					break;
 				case "OPEN":
@@ -364,5 +395,21 @@ public class BBGReferenceResponseHandler extends AbstractResponseHandler<BBGRefe
 		request.incrementCompletionCount();
 	}
 
+	@Deprecated // This method does not need to be called if we are mapping the field from the bloomberg response to the query (rather than using ordering)
+	private List<Field> filterFieldsForExceptions(Element securityData,List<Field> fieldList) {
+		if(!securityData.hasElement("fieldExceptions"))
+			return fieldList;
+		Element fieldExceptions = securityData.getElement("fieldExceptions");
+		Stream<Field> fieldStream = fieldList.stream();
+		for (int j = 0; j < fieldExceptions.numValues(); ++j) {
+			Element fieldException = fieldExceptions.getValueAsElement(j);
+			String fieldExceptedStr = fieldException.getElement("fieldId").getValueAsString(); 			
+			Optional<Field> fieldExcepted = fieldStream.filter(f -> f.name(DataServiceEnum.BLOOMBERG).equals(fieldExceptedStr)).findFirst();
+			if(fieldExcepted.isPresent())
+				fieldList.remove(fieldExcepted.get());			
+		}
+		return fieldList;
 
+	}
+	
 }

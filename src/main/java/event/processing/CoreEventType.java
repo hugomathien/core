@@ -1,4 +1,4 @@
-package eventprocessors;
+package event.processing;
 
 public enum CoreEventType implements EventType {
 DATA_REQUEST,
@@ -24,5 +24,8 @@ ALEXANDRIA,
 BLOCK_TRADE,
 NQP_INSTRUMENT,
 NQP_FLOW,
-PORTFOLIO_COMPOSITION
+PORTFOLIO_COMPOSITION,
+INSTRUMENT_STATE_CAPTURE,
+STREAMING_QUERY,
+DATASET_PIPELINE
 }

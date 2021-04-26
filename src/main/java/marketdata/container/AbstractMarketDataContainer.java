@@ -38,4 +38,8 @@ public abstract class AbstractMarketDataContainer {
 			throw new MarketDataMissingException("Market data missing " + field.toString());
 	}
 	
+	public Object get(String field) throws MarketDataMissingException {
+		return get(Field.get(field));
+	}
+	
 }

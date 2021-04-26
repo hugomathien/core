@@ -10,7 +10,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import config.CoreConfig;
 import exceptions.DataServiceStartException;
-import marketdata.services.bloomberg.services.BBGReferenceDataService;
+import marketdata.services.bloomberg.BBGReferenceDataService;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = CoreConfig.class)

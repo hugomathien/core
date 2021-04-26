@@ -2,8 +2,9 @@ package finance.identifiers;
 
 import finance.instruments.IInstrument;
 import finance.instruments.Instrument;
-import finance.springBean.Exchange;
+import finance.misc.Exchange;
 
+@Deprecated
 public interface IIdentifier {
 	public String getName();
 	public IInstrument getInstrument();

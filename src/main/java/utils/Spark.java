@@ -3,11 +3,8 @@ package utils;
 import org.apache.spark.SparkConf;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.streaming.Durations;
-import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-
 
 @Service
 public class Spark {
@@ -33,7 +30,8 @@ public class Spark {
 	private Integer streamingMillisDuration;
 	@Value("${spark.testing.memory}")
 	private Long testingMemory;
-	
+	@Value("${spark.sql.shuffle.partitions}")
+	private Integer shufflePartitions;
 	
 	public Spark() {
 		
@@ -49,15 +47,13 @@ public class Spark {
 				  .config("spark.driver.memory", driverMemory)
 				  .config("spark.driver.cores", driverCores)
 				  .config("spark.executor.cores", executorCores)
+				  .config("spark.local.dirs", localDir)
+				  .config("spark.java.io.tmp.dir", ioTmpDir)
 				  .config("spark.streaming.millis.duration", streamingMillisDuration)
+				  .config("spark.sql.shuffle.partitions",shufflePartitions)
 				  .config("spark.testing.memory", testingMemory)
 				  .getOrCreate();
 	}
 	
-	public JavaStreamingContext sparkStreaming() {
-		SparkConf conf = new SparkConf().setMaster("local[2]").setAppName("Spark Streaming");
-		JavaStreamingContext jssc = new JavaStreamingContext(conf, Durations.seconds(10));
-		
-		return jssc; // TODO Spark Streaming init
-	}
+	
 }

@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.TreeSet;
 
 import config.CoreConfig;
 import finance.identifiers.IdentifierType;
@@ -47,11 +48,11 @@ public class ETF extends Instrument implements IPortfolio {
 		portfolio.setWeights(weights);
 	}
 	
-	public List<IInstrument> getComposition() {
+	public TreeSet<IInstrument> getComposition() {
 		return portfolio.getComposition();
 	}
 	
-	public void setComposition(List<IInstrument> composition) {
+	public void setComposition(TreeSet<IInstrument> composition) {
 		portfolio.setComposition(composition);
 	}
 

@@ -7,16 +7,23 @@ import java.util.Map;
 import org.apache.spark.sql.SparkSession;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.ImportResource;
+import org.springframework.context.annotation.Scope;
 
-import eventprocessors.EventPriorityQueue;
-import events.MarketDataEventFactory;
+import event.events.MarketDataEventFactory;
+import event.processing.EventPriorityQueue;
+import event.sequencing.DataRequestSequencer;
+import event.sequencing.DatasetPipelineSequencer;
+import event.sequencing.InstrumentStateCaptureSequencer;
+import event.sequencing.StreamQuerySequencer;
 import finance.identifiers.IdentifierType;
 import finance.instruments.ETF;
 import finance.instruments.FX;
@@ -26,24 +33,27 @@ import finance.instruments.Index;
 import finance.instruments.InstrumentFactory;
 import finance.instruments.InstrumentType;
 import finance.instruments.SingleStock;
-import finance.springBean.Exchange;
+import finance.misc.Exchange;
+import marketdata.services.bloomberg.BBGRealTimeDataService;
+import marketdata.services.bloomberg.BBGReferenceDataService;
 import marketdata.services.bloomberg.responsehandler.BBGRealTimeResponseHandler;
 import marketdata.services.bloomberg.responsehandler.BBGReferenceResponseHandler;
-import marketdata.services.bloomberg.services.BBGRealTimeDataService;
-import marketdata.services.bloomberg.services.BBGReferenceDataService;
+import marketdata.services.randomgen.RandomGeneratorReferenceDataService;
+import marketdata.services.randomgen.responsehandler.RandomGeneratorReferenceResponseHandler;
+import streaming.source.MemoryStreamWrapper;
 import utils.Spark;
 
 @Configuration
 @Import({FlatFileDataConfig.class,SparkConfig.class})
 @ImportResource({"classpath:/config/bart.core.config.xml"})
 @ComponentScan(basePackages = {
-		"events",
-		"eventprocessors",
+		"event.events",
+		"event.processing",
+		"event.sequencing",
 		"marketdata",
 		"finance.instruments",
 		"marketdata.field",
-		"marketdata.services",
-		"springBean"})
+		"marketdata.services"})
 public class CoreConfig implements ApplicationContextAware {
 	public static ApplicationContext ctx;
 	public static IdentifierType PRIMARY_IDENTIFIER_TYPE;
@@ -72,7 +82,6 @@ public class CoreConfig implements ApplicationContextAware {
 		return ctx.getBean(SparkSession.class);
 	}
 	
-	
 	public InstrumentFactory instrumentFactory() {
 		return ctx.getBean(InstrumentFactory.class);
 	}
@@ -85,16 +94,49 @@ public class CoreConfig implements ApplicationContextAware {
 		return ctx.getBean(EventPriorityQueue.class);
 	}
 	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Bean
+	@Scope("prototype")
+	public DataRequestSequencer<?> getDataRequestSequencer(DataRequestSequencer.Builder<?> builder) {
+		return new DataRequestSequencer(builder);
+	}
+	
+	@Bean
+	@Scope("prototype")
+	public InstrumentStateCaptureSequencer getInstrumentStateCaptureSequencer(InstrumentStateCaptureSequencer.Builder builder) {
+		return new InstrumentStateCaptureSequencer(builder);
+	}
+	
+	@Bean
+	@Scope("prototype")
+	public StreamQuerySequencer getStreamingQuerySequencer(StreamQuerySequencer.Builder builder) {
+		return new StreamQuerySequencer(builder);
+	}
+	
+	@Bean
+	@Scope("prototype")
+	public DatasetPipelineSequencer getDatasetPipelineSequencer(DatasetPipelineSequencer.Builder builder) {
+		return new DatasetPipelineSequencer(builder);
+	}
+	
+	
+	@Bean
+	@Scope("prototype")
 	public Exchange getExchange(String mic) {
 		if(mic == null)
-			return exchangeMicMap.get("OTC");
+			return getExchange("OTC");
 		
 		if(exchangeMicMap.containsKey(mic))
 			return exchangeMicMap.get(mic);
-		else
-			return new Exchange(mic);
+		else {
+			Exchange exch = new Exchange(mic);
+			this.exchangeMicMap.put(mic, exch);
+			return exch;
+		}
 	}
 	
+	
+	// TODO: have instruments managed by spring ? How do we avoid name collision by dynamically giving spring id and names corresponding to the identifiers args ? 
 	public IInstrument getInstrument(String id) {
 		return factory.getInstrument(id);
 	}
@@ -134,6 +176,15 @@ public class CoreConfig implements ApplicationContextAware {
 			return factory.makeFx(ccyLeft,ccyRight);
 	}
 	
+	
+	public RandomGeneratorReferenceDataService randomGeneratorReferenceDataService() {
+		return ctx.getBean(RandomGeneratorReferenceDataService.class);
+	}
+	
+	public RandomGeneratorReferenceResponseHandler randomGeneratorReferenceResponseHandler() {
+		return ctx.getBean(RandomGeneratorReferenceResponseHandler.class);
+	}
+	
 	public BBGReferenceDataService bloombergReferenceDataService() {
 		return ctx.getBean(BBGReferenceDataService.class);
 	}
@@ -150,18 +201,22 @@ public class CoreConfig implements ApplicationContextAware {
 		return ctx.getBean(BBGRealTimeResponseHandler.class);
 	}
 	
+	@Value("${clock.startDate}")
 	public void setGlobalStartDate(String startDate) {
 		GLOBAL_START_DATE = LocalDate.parse(startDate);
 	}
 	
+	@Value("${clock.endDate}")
 	public void setGlobalEndDate(String endDate) {
 		GLOBAL_END_DATE = LocalDate.parse(endDate);
 	}
 	
+	@Value("${clock.zoneId}")
 	public void setGlobalZoneId(String zoneId) {
 		GLOBAL_ZONE_ID = ZoneId.of(zoneId);
 	}
 	
+	@Value("${instrument.primary.identifier.type}")
 	public void setPrimaryIdentifierType(String primaryIdentifierType) {
 		PRIMARY_IDENTIFIER_TYPE = IdentifierType.valueOf(primaryIdentifierType);
 	}

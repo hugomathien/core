@@ -1,4 +1,4 @@
-package marketdata.services.bloomberg.services;
+package marketdata.services.bloomberg;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -22,7 +22,7 @@ import com.bloomberglp.blpapi.Session;
 
 import exceptions.DataQueryException;
 import finance.identifiers.IBloombergIdentifier;
-import finance.identifiers.IIdentifier;
+import finance.identifiers.Identifier;
 import marketdata.field.Field;
 import marketdata.services.base.DataRequest;
 import marketdata.services.base.IReferenceDataService;
@@ -129,7 +129,7 @@ public class BBGReferenceDataService extends BBGService implements IReferenceDat
 	}
 
 	private void intradayTickRequest(DataRequest<Object> requestBuilder) throws DataQueryException {
-		for(IIdentifier security : requestBuilder.getIdentifiers()) {
+		for(Identifier security : requestBuilder.getIdentifiers()) {
 			Request request = this.getService().createRequest("IntradayTickRequest");
 			request = this.setSecurity(request, security);
 			request = this.appendEventTypes(requestBuilder, request);
@@ -143,7 +143,7 @@ public class BBGReferenceDataService extends BBGService implements IReferenceDat
 	}
 	
 	private void intradayBarRequest(DataRequest<Object> requestBuilder) throws DataQueryException {
-		for(IIdentifier security : requestBuilder.getIdentifiers()) {
+		for(Identifier security : requestBuilder.getIdentifiers()) {
 			for(Field field : requestBuilder.getFields()) {
 				Request request = this.getService().createRequest("IntradayBarRequest");
 				request = this.setSecurity(request,security);
@@ -159,7 +159,7 @@ public class BBGReferenceDataService extends BBGService implements IReferenceDat
 	}
 	
 	private Request appendInstruments(DataRequest<Object> requestBuilder, Request request) {
-		for(IIdentifier security : requestBuilder.getIdentifiers()) {
+		for(Identifier security : requestBuilder.getIdentifiers()) {
 			String bbgSyntax = ((IBloombergIdentifier) security).getBbgQuerySyntax();
 			request.append("securities", bbgSyntax);
 		}
@@ -180,7 +180,7 @@ public class BBGReferenceDataService extends BBGService implements IReferenceDat
 		return request;
 	}
 	
-	private Request setSecurity(Request request, IIdentifier security) {
+	private Request setSecurity(Request request, Identifier security) {
 		String bbgSyntax = ((IBloombergIdentifier) security).getBbgQuerySyntax();
 		request.set("security", bbgSyntax);
 		return request;

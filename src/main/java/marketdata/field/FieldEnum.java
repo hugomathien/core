@@ -4,7 +4,7 @@ import java.beans.Transient;
 import java.io.Serializable;
 import java.util.HashMap;
 
-import finance.tradingcycle.TradingPhaseEnum;
+import finance.misc.TradingPhaseEnum;
 import marketdata.services.base.DataServiceEnum;
 
 public enum FieldEnum implements Field, Serializable {

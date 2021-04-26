@@ -1,4 +1,4 @@
-package eventsequencers;
+package event.sequencing;
 
 import java.time.Duration;
 import java.time.LocalTime;

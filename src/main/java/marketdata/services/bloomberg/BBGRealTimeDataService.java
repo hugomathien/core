@@ -1,4 +1,4 @@
-package marketdata.services.bloomberg.services;
+package marketdata.services.bloomberg;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -20,7 +20,7 @@ import com.bloomberglp.blpapi.SubscriptionList;
 
 import exceptions.DataQueryException;
 import finance.identifiers.IBloombergIdentifier;
-import finance.identifiers.IIdentifier;
+import finance.identifiers.Identifier;
 import marketdata.field.Field;
 import marketdata.services.base.DataRequest;
 import marketdata.services.base.IRealTimeDataService;
@@ -32,13 +32,13 @@ import marketdata.services.bloomberg.responsehandler.BBGRealTimeResponseHandler;
 @Lazy(true)
 public class BBGRealTimeDataService extends BBGService implements IRealTimeDataService {
 
-	private HashMap<CorrelationID,Pair<IIdentifier,Collection<Field>>> requestMap;
+	private HashMap<CorrelationID,Pair<Identifier,Collection<Field>>> requestMap;
 	@Autowired
 	private BBGRealTimeResponseHandler responseHandler;
 
 	@PostConstruct
 	public void init() {
-		this.requestMap = new HashMap<CorrelationID, Pair<IIdentifier,Collection<Field>>>();
+		this.requestMap = new HashMap<CorrelationID, Pair<Identifier,Collection<Field>>>();
 		Session session = new Session(this.getSessionOptions(), responseHandler);
 		this.setSession(session);
 	}
@@ -57,16 +57,16 @@ public class BBGRealTimeDataService extends BBGService implements IRealTimeDataS
 
 		requestBuilder
 		.getIdentifiers()
-		.forEach(new Consumer<IIdentifier>() {
+		.forEach(new Consumer<Identifier>() {
 			@Override
-			public void accept(IIdentifier id) {
+			public void accept(Identifier id) {
 				CorrelationID correlID = new CorrelationID(requestMap.size()+1);
 				Subscription sub = new Subscription(
 						((IBloombergIdentifier) id).getBbgQuerySyntax(),
 						fieldChain,
 						new CorrelationID(requestMap.size() + 1));
 				subscriptions.add(sub);
-				requestMap.put(correlID, new Pair<IIdentifier,Collection<Field>>(id,requestBuilder.getFields()));
+				requestMap.put(correlID, new Pair<Identifier,Collection<Field>>(id,requestBuilder.getFields()));
 			}
 		});
 
@@ -77,11 +77,11 @@ public class BBGRealTimeDataService extends BBGService implements IRealTimeDataS
 		}
 	}
 	
-	public HashMap<CorrelationID,Pair<IIdentifier, Collection<Field>>> getRequestMap() {
+	public HashMap<CorrelationID,Pair<Identifier, Collection<Field>>> getRequestMap() {
 		return requestMap;
 	}
 	
-	public void setRequestMap(HashMap<CorrelationID,Pair<IIdentifier,Collection<Field>>> requestMap) {
+	public void setRequestMap(HashMap<CorrelationID,Pair<Identifier,Collection<Field>>> requestMap) {
 		this.requestMap = requestMap;
 	}
 	

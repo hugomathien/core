@@ -5,7 +5,7 @@ import java.util.Map;
 
 import config.CoreConfig;
 import finance.instruments.IInstrument;
-import finance.springBean.Exchange;
+import finance.misc.Exchange;
 
 public class Ric extends Identifier {
 	private static Map<String,String> ricMicMap = new HashMap<String,String>();

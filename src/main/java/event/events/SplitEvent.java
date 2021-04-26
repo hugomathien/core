@@ -1,4 +1,4 @@
-package events;
+package event.events;
 
 import java.time.Instant;
 
@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import eventprocessors.CoreEventType;
+import event.processing.CoreEventType;
 import finance.instruments.IInstrument;
 
 @Component

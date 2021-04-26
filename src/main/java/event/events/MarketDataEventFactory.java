@@ -1,4 +1,4 @@
-package events;
+package event.events;
 
 import java.time.Instant;
 import java.time.temporal.Temporal;
@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
-import eventprocessors.EventPriorityQueue;
+import event.processing.EventPriorityQueue;
 import finance.instruments.IInstrument;
 import marketdata.container.MarketDataContainerEnum;
 import marketdata.field.Field;
@@ -44,13 +44,13 @@ public class MarketDataEventFactory {
 				queue.add(new MarketDataEventBar(eventTimestamp, dataService, marketDataStart,marketDataEnd,instrument,field,value));
 				break;
 			case DAY:
-				queue.add(new MarketDataEventBar(eventTimestamp, dataService, marketDataStart,marketDataEnd,instrument,field,value));
+				queue.add(new MarketDataEventDay(eventTimestamp, dataService, marketDataStart,marketDataEnd,instrument,field,value));
 				break;
 			case TICK:
-				queue.add(new MarketDataEventBar(eventTimestamp, dataService, marketDataStart,marketDataEnd,instrument,field,value));
+				queue.add(new MarketDataEventTick(eventTimestamp, dataService, marketDataStart,marketDataEnd,instrument,field,value));
 				break;
 			case SPOT:
-				queue.add(new MarketDataEventBar(eventTimestamp, dataService, marketDataStart,marketDataEnd,instrument,field,value));
+				queue.add(new MarketDataEventSpot(eventTimestamp, dataService, marketDataStart,marketDataEnd,instrument,field,value));
 				break;
 			default:
 				return;

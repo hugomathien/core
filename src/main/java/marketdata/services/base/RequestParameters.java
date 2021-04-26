@@ -13,18 +13,23 @@ public enum RequestParameters {
 	interval,
 	intervalType,
 	gapFillInitialBar,
-	UseDFDF,
+	UseDPDF,
 	Use1DDateList,
 	indices,
 	zoneId,
 	books,
+	adjustmentSplit,
+	adjustmentAbnormal,
+	adjustmentNormal,
+	adjustmentFollowDPDF,
 	includeNonPlottableEvents,
 	includeConditionCodes,
 	includeExchangeCodes,
 	includeBrokerCodes,
 	includeRpsCode,
 	includeBicMicCodes,
-	minVolumePct;
+	minVolumePct,
+	randomizedNumberScales;
 	
 	private RequestParameters() {
 		

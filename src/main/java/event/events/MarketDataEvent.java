@@ -1,12 +1,12 @@
-package events;
+package event.events;
 
 import java.time.Instant;
 import java.time.temporal.Temporal;
 
 import org.springframework.core.Ordered;
 
-import eventprocessors.CoreEventType;
-import eventprocessors.EventType;
+import event.processing.CoreEventType;
+import event.processing.EventType;
 import finance.instruments.IInstrument;
 import marketdata.field.Field;
 import marketdata.services.base.DataServiceEnum;

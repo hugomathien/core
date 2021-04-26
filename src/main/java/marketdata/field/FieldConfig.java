@@ -18,7 +18,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
 import config.CoreConfig;
-import finance.tradingcycle.TradingPhaseEnum;
+import finance.misc.TradingPhaseEnum;
 import marketdata.services.base.DataServiceEnum;
 
 @Component
@@ -61,8 +61,8 @@ public class FieldConfig {
 				}
 				
 				for(int i=serviceColumnBegin;i<linearr.length;i++) {
-					field.getMapDataServiceToString().put(dataServices.get(serviceColumnBegin-5),linearr[i]);
-					serviceFieldMap.get(dataServices.get(serviceColumnBegin-5)).put(linearr[i],field);
+					field.getMapDataServiceToString().put(dataServices.get(i-serviceColumnBegin),linearr[i]);
+					serviceFieldMap.get(dataServices.get(i-serviceColumnBegin)).put(linearr[i],field);
 				}
 			}
 		}

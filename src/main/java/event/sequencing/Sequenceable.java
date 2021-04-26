@@ -1,4 +1,4 @@
-package eventsequencers;
+package event.sequencing;
 
 import java.time.Instant;
 

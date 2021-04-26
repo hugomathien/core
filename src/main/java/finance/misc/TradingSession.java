@@ -1,4 +1,4 @@
-package finance.springBean;
+package finance.misc;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -6,8 +6,6 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
 import org.springframework.format.annotation.DateTimeFormat;
-
-import finance.tradingcycle.TradingPhaseEnum;
 
 public class TradingSession {
 	private TradingPhaseEnum tradingPhase;

@@ -3,6 +3,8 @@ package utils;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
+import java.util.Collections;
+import java.util.List;
 
 public class MiscUtils {
 
@@ -39,7 +41,7 @@ public class MiscUtils {
 	public static LocalDate plusWeekdays(int dayOffset,LocalDate ld) {
 
 		do { 
-			ld.plusDays(dayOffset);
+			ld = ld.plusDays(dayOffset);
 		} while(!isWeekday(ld));
 		return ld;
 	}
@@ -54,4 +56,5 @@ public class MiscUtils {
 		}
 		return true;
 	}
+	
 }

@@ -5,7 +5,6 @@ import java.time.LocalDate;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.core.annotation.Order;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -34,7 +33,7 @@ public class TestBBGReferenceDataRequest {
 		request = new DataRequest.Builder<>()
 		.dataService(DataServiceEnum.BLOOMBERG)
 		.backfill(false)
-		.fields("PX_LAST","VOLUME")
+		.fields("PX_LAST","VOLUME","FIELD_EXCEPTION_ERROR")
 		.identifierType(IdentifierType.TICKER)
 		.identifiers(InstrumentType.SingleStock, new String[]{"FP FP","VOD LN"})
 		.requestType(RequestType.ReferenceDataRequest)
@@ -52,7 +51,7 @@ public class TestBBGReferenceDataRequest {
 		.fields("INDX_MWEIGHT_HIST")
 		.override(RequestOverrides.END_DATE_OVERRIDE, LocalDate.of(2021, 3, 1))
 		.identifierType(IdentifierType.TICKER)
-		.identifiers(InstrumentType.Index, new String[]{"SXXP"})
+		.identifiers(InstrumentType.Index, new String[]{"SX5E"})
 		.requestType(RequestType.ReferenceDataRequest)
 		.build();
 		
@@ -67,7 +66,8 @@ public class TestBBGReferenceDataRequest {
 		.backfill(false)
 		.fields("PX_LAST")
 		.identifierType(IdentifierType.TICKER)
-		.universe("SXXP")
+		.instrumentType(InstrumentType.SingleStock)
+		.universe("SX5E")
 		.requestType(RequestType.ReferenceDataRequest)
 		.build();
 		

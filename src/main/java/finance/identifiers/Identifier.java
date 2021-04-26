@@ -2,9 +2,9 @@ package finance.identifiers;
 
 
 import finance.instruments.IInstrument;
-import finance.springBean.Exchange;
+import finance.misc.Exchange;
 
-public abstract class Identifier implements IIdentifier,Comparable<Identifier> {
+public abstract class Identifier implements Comparable<Identifier> {
 
 	private String name;
 	private IdentifierType type;
@@ -54,8 +54,6 @@ public abstract class Identifier implements IIdentifier,Comparable<Identifier> {
 	@Override
 	public int compareTo(Identifier identifier) {
 		return this.getName().compareTo(identifier.getName());
-		
-		
 		
 	}
 }

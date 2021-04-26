@@ -1,10 +1,10 @@
-package events;
+package event.events;
 
 import java.time.Instant;
 
 import org.springframework.context.ApplicationEvent;
 
-import eventprocessors.EventType;
+import event.processing.EventType;
 
 public abstract class Event extends ApplicationEvent {
 	

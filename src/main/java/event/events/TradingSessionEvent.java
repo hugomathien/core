@@ -1,10 +1,10 @@
-package events;
+package event.events;
 
 import java.time.Instant;
 
-import eventprocessors.EventType;
-import finance.springBean.Exchange;
-import finance.springBean.TradingSession;
+import event.processing.EventType;
+import finance.misc.Exchange;
+import finance.misc.TradingSession;
 
 public abstract class TradingSessionEvent extends Event {
 	private Exchange exchange;

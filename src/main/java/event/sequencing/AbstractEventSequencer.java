@@ -1,4 +1,4 @@
-package eventsequencers;
+package event.sequencing;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -17,11 +17,11 @@ import org.springframework.core.Ordered;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import config.CoreConfig;
-import eventprocessors.EventPriorityQueue;
-import events.TimerEvent;
+import event.events.TimerEvent;
+import event.processing.EventPriorityQueue;
 import utils.MiscUtils;
 
-public abstract class AbstractEventSequencer extends java.util.Observable {
+public abstract class AbstractEventSequencer<S extends Sequenceable> {
 	@Autowired
 	protected EventPriorityQueue queue;
 	@Autowired
@@ -48,7 +48,7 @@ public abstract class AbstractEventSequencer extends java.util.Observable {
 	}
 
 
-	public AbstractEventSequencer(Builder builder) {
+	public AbstractEventSequencer(Builder<S> builder) {
 		this.zoneId = builder.zoneId;
 		this.startDate = builder.startDate;
 		this.endDate = builder.endDate;
@@ -58,10 +58,11 @@ public abstract class AbstractEventSequencer extends java.util.Observable {
 		this.windowLookBack = builder.windowLookBack;
 		this.windowLookForward = builder.windowLookForward;
 		this.initialWindowLookBack = builder.initialWindowLookBack;
+		this.priority = builder.priority;
 	}
 
 	@PostConstruct
-	public void initTime() {
+	public void init() {
 		if(startDate == null)
 			return;
 		else if(endDate == null)
@@ -76,10 +77,11 @@ public abstract class AbstractEventSequencer extends java.util.Observable {
 			startZdt = startDate.atStartOfDay(zoneId);
 		else
 			startZdt = startDate.atTime(startTime).atZone(zoneId);
+		
 		if(endTime == null)
-			startZdt = startDate.atStartOfDay(zoneId);
+			endZdt = endDate.atStartOfDay(zoneId);
 		else
-			startZdt = startDate.atTime(endTime).atZone(zoneId);
+			endZdt = endDate.atTime(endTime).atZone(zoneId);
 
 		//startZdt = BartDateUtils.weekday(startZdt);
 		//endZdt = BartDateUtils.weekday(endZdt);
@@ -116,6 +118,7 @@ public abstract class AbstractEventSequencer extends java.util.Observable {
 	public void processEvent(TimerEvent event) {
 		try {
 			event.getSequenceable().execute(event.getEventTimestamp());
+			this.nextEvent();
 		}
 		catch(Exception e) {
 			Logger.getRootLogger().log(Level.WARN, "Failed to run time " + this.getClass().getName() + " @" + event.getEventTimestamp().toString());
@@ -212,7 +215,7 @@ public abstract class AbstractEventSequencer extends java.util.Observable {
 		this.clock = clock;
 	}
 	
-	public static abstract class Builder {
+	public static abstract class Builder<S extends Sequenceable> {
 		private ZoneId zoneId;
 		@DateTimeFormat(pattern = "yyyy-MM-dd")
 		private LocalDate startDate;
@@ -226,77 +229,84 @@ public abstract class AbstractEventSequencer extends java.util.Observable {
 		private Duration initialWindowLookBack = Duration.ZERO;
 		private Duration windowLookBack = Duration.ZERO;
 		private Duration windowLookForward = Duration.ZERO;
-
+		private int priority = Ordered.LOWEST_PRECEDENCE;
+		
 		public Builder() {
 			this.zoneId = CoreConfig.GLOBAL_ZONE_ID;
 			this.startDate = CoreConfig.GLOBAL_START_DATE;
 			this.endDate = CoreConfig.GLOBAL_END_DATE;
 		}
 		
-		public AbstractEventSequencer.Builder zoneId(ZoneId zoneId) {
+		public AbstractEventSequencer.Builder<S> zoneId(ZoneId zoneId) {
 			this.zoneId = zoneId;
 			return this;
 		}
 		
-		public AbstractEventSequencer.Builder date(LocalDate date) {
+		public AbstractEventSequencer.Builder<S> date(LocalDate date) {
 			this.startDate = date;
 			this.endDate = date;
 			return this;
 		}
 		
-		public AbstractEventSequencer.Builder startDate(LocalDate startDate) {
+		public AbstractEventSequencer.Builder<S> startDate(LocalDate startDate) {
 			this.startDate = startDate;
 			return this;
 		}
 		
-		public AbstractEventSequencer.Builder endDate(LocalDate endDate) {
+		public AbstractEventSequencer.Builder<S> endDate(LocalDate endDate) {
 			this.endDate = endDate;
 			return this;
 		}
 		
-		public AbstractEventSequencer.Builder startTime(LocalTime startTime) {
+		public AbstractEventSequencer.Builder<S> startTime(LocalTime startTime) {
 			this.startTime = startTime;
 			return this;
 		}
 		
-		public AbstractEventSequencer.Builder endTime(LocalTime endTime) {
+		public AbstractEventSequencer.Builder<S> endTime(LocalTime endTime) {
 			this.endTime = endTime;
 			return this;
 		}
 		
-		public AbstractEventSequencer.Builder startInstant(Instant instant) {
+		public AbstractEventSequencer.Builder<S> startInstant(Instant instant) {
 			this.startDate = instant.atZone(this.zoneId).toLocalDate();
 			this.startTime = instant.atZone(this.zoneId).toLocalTime();
 			return this;
 		}
 
-		public AbstractEventSequencer.Builder endInstant(Instant instant) {
+		public AbstractEventSequencer.Builder<S> endInstant(Instant instant) {
 			this.endDate = instant.atZone(this.zoneId).toLocalDate();
 			this.endTime = instant.atZone(this.zoneId).toLocalTime();
 			return this;
 		}
 		
-		public AbstractEventSequencer.Builder step(Duration step) {
+		public AbstractEventSequencer.Builder<S> step(Duration step) {
 			this.step = step;
 			return this;
 		}
 		
-		public AbstractEventSequencer.Builder windowLookBack(Duration windowLookBack) {
+		public AbstractEventSequencer.Builder<S> windowLookBack(Duration windowLookBack) {
 			this.windowLookBack = windowLookBack;
 			return this;
 		}
 		
-		public AbstractEventSequencer.Builder windowLookForward(Duration windowLookForward) {
+		public AbstractEventSequencer.Builder<S> windowLookForward(Duration windowLookForward) {
 			this.windowLookForward = windowLookForward;
 			return this;
 		}
 		
-		public AbstractEventSequencer.Builder initialWindowLookBack(Duration initialWindowLookBack) {
+		public AbstractEventSequencer.Builder<S> initialWindowLookBack(Duration initialWindowLookBack) {
 			this.initialWindowLookBack = initialWindowLookBack;
 			return this;
 		}
 		
-		public abstract AbstractEventSequencer build();
+		public AbstractEventSequencer.Builder<S> priority(int priority) {
+			this.priority = priority;
+			return this;
+		}
+		
+		
+		public abstract AbstractEventSequencer<S> build(); // TODO HM: i think we could replace this with just the wildcard to save from casting later
 	}
 }
 

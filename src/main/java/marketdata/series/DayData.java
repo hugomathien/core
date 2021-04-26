@@ -1,32 +1,34 @@
 package marketdata.series;
 
+import java.time.Instant;
 import java.time.LocalDate;
 
+import config.CoreConfig;
 import marketdata.container.Day;
 import utils.TimeSeries;
 
-public class DayData extends MarketDataSeries<LocalDate,Day> {
+public class DayData extends MarketDataSeries<Instant,Day> {
 
-	private TimeSeries<LocalDate,Day> eodSeries;
+	private TimeSeries<Instant,Day> eodSeries;
 	
 	public DayData() {
 		super();
 	}
 	
 	@Override
-	public TimeSeries<LocalDate, Day> getTimeSeries(Integer interval) {
+	public TimeSeries<Instant, Day> getTimeSeries(Integer interval) {
 		return this.eodSeries;
 	}
 
 	@Override
-	public TimeSeries<LocalDate, Day> getTimeSeries() {
+	public TimeSeries<Instant, Day> getTimeSeries() {
 		if(this.eodSeries == null)
-			this.eodSeries = new TimeSeries<LocalDate,Day>();
+			this.eodSeries = new TimeSeries<Instant,Day>();
 		
 		return this.eodSeries;
 	}
 	
-	public Day getEod(LocalDate timestamp) {
+	public Day getEod(Instant timestamp) {
 		Day eod;
 		if(this.getTimeSeries().containsKey(timestamp)) {
 			eod = this.getTimeSeries().get(timestamp);
@@ -36,6 +38,16 @@ public class DayData extends MarketDataSeries<LocalDate,Day> {
 			this.getTimeSeries().put(timestamp, eod);
 		}
 		return eod;
+	}
+	
+	public Day getEod(LocalDate ld) {
+		Day eod;
+		Instant instant = ld.atStartOfDay(CoreConfig.GLOBAL_ZONE_ID).toInstant();
+		return getEod(instant);
+	}
+	
+	public Day getEod(String ld) {
+		return getEod(LocalDate.parse(ld));
 	}
 
 }

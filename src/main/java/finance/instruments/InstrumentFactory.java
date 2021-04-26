@@ -7,10 +7,16 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
@@ -19,9 +25,8 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import config.CoreConfig;
-import events.InstrumentDelistEvent;
-import events.NewInstrumentEvent;
-import finance.identifiers.IIdentifier;
+import event.events.InstrumentDelistEvent;
+import event.events.NewInstrumentEvent;
 import finance.identifiers.Identifier;
 import finance.identifiers.IdentifierType;
 
@@ -39,23 +44,23 @@ public class InstrumentFactory {
 	@Autowired
 	private ApplicationEventPublisher publisher;
 	private Set<IInstrument> instrumentSet = new HashSet<IInstrument>(); // TODO: Needs concurrent ? Key and improve lookup time
-	private Set<IIdentifier> identifierSet = new HashSet<IIdentifier>(); // Needs concurrent ? TODO: Key and improve lookup time
+	private Set<Identifier> identifierSet = new HashSet<Identifier>(); // Needs concurrent ? TODO: Key and improve lookup time
 
 	public InstrumentFactory() {}
 
 	public Set<IInstrument> getInstrumentSet() {
 		return instrumentSet;
 	}
-	
+
 	public void setInstrumentSet(Set<IInstrument> instrumentSet) {
 		this.instrumentSet = instrumentSet;
 	}
 
-	public Set<IIdentifier> getIdentifierSet() {
+	public Set<Identifier> getIdentifierSet() {
 		return identifierSet;
 	}
 
-	public void setIdentifierSet(Set<IIdentifier> identifierSet) {
+	public void setIdentifierSet(Set<Identifier> identifierSet) {
 		this.identifierSet = identifierSet;
 	}
 
@@ -68,7 +73,7 @@ public class InstrumentFactory {
 		return names.iterator();
 	}
 
-	public IIdentifier getIdentifier(String securityName) {
+	public Identifier getIdentifier(String securityName) {
 		return this.identifierSet.stream().filter(i -> i.getName().equals(securityName)).findAny().orElse(null);
 	}
 
@@ -76,7 +81,7 @@ public class InstrumentFactory {
 		if(securityName == null)
 			return null;
 		try {
-			IIdentifier identifier = this.identifierSet.stream().filter(i -> i.getName().equals(securityName)).findAny().get();
+			Identifier identifier = this.identifierSet.stream().filter(i -> i.getName().equals(securityName)).findAny().get();
 			return identifier.getInstrument();
 		}
 		catch(NoSuchElementException e) {
@@ -98,10 +103,10 @@ public class InstrumentFactory {
 
 	public boolean removeInstrument(IInstrument instrument,InstrumentType instrumentType,LocalDate... date) {
 		try {
-			List<IIdentifier> identifiersToRemove = this.identifierSet.stream().filter(x -> x.getInstrument().equals(instrument)).collect(Collectors.toList());
+			List<Identifier> identifiersToRemove = this.identifierSet.stream().filter(x -> x.getInstrument().equals(instrument)).collect(Collectors.toList());
 			this.identifierSet.removeAll(identifiersToRemove);
 			this.instrumentSet.remove(instrument);
-			
+
 			if(date.length>0) {
 				publisher.publishEvent(
 						new InstrumentDelistEvent (
@@ -194,22 +199,22 @@ public class InstrumentFactory {
 		Iterator<String> iterator = getIterator(names);
 		return makeMultipleInstrument(instrumentType,iterator);
 	}
-	
-	public HashSet<IInstrument> makeMultipleInstrument(InstrumentType instrumentType, IdentifierType identifierType,String[] names) {
+
+	public HashSet<IInstrument> makeMultipleInstrument(InstrumentType instrumentType, IdentifierType identifierType,String... names) {
 		Iterator<String> iterator = getIterator(names);
 		return makeMultipleInstrument(instrumentType,identifierType,iterator);
 	}
-	
+
 	public HashSet<IInstrument> makeMultipleInstrument(InstrumentType instrumentType, Collection<String> names) {
 		Iterator<String> iterator = getIterator(names);
 		return makeMultipleInstrument(instrumentType,iterator);
 	}
-	
+
 	public HashSet<IInstrument> makeMultipleInstrument(InstrumentType instrumentType, IdentifierType identifierType,Collection<String> names) {
 		Iterator<String> iterator = getIterator(names);
 		return makeMultipleInstrument(instrumentType,identifierType,iterator);
 	}
-	
+
 	public HashSet<IInstrument> makeMultipleInstrument(InstrumentType instrumentType, Iterator<String> names) {
 		HashSet<IInstrument> set = new HashSet<IInstrument>();
 		while(names.hasNext()) {
@@ -219,7 +224,7 @@ public class InstrumentFactory {
 		}
 		return set;
 	}
-	
+
 	public HashSet<IInstrument> makeMultipleInstrument(InstrumentType instrumentType, IdentifierType identifierType, Iterator<String> names) {
 		HashSet<IInstrument> set = new HashSet<IInstrument>();
 		while(names.hasNext()) {
@@ -229,11 +234,11 @@ public class InstrumentFactory {
 		}
 		return set;
 	}
-	
+
 	public FX getFx(String ccyLeft,String ccyRight) {
 		return (FX) this.instrumentSet.stream().filter(i -> i.getInstrumentType().equals(FX)).filter(i -> ((FX) i).getCcyLeft().equals(ccyLeft) && ((FX) i).getCcyRight().equals(ccyRight)).findAny().orElse(null);
 	}
-	
+
 	public FX makeFx(String ccyLeft,String ccyRight) {
 		if(this.hasFx(ccyLeft, ccyRight))
 			return getFx(ccyLeft, ccyRight);
@@ -242,24 +247,26 @@ public class InstrumentFactory {
 		this.addIdentifier(fx,IdentifierType.TICKER,ccyLeft+ccyRight,true);
 		return fx;
 	}
-	
+
 	private Identifier makeIdentifier(IInstrument instrument,IdentifierType identifierType,String name) {
-		Identifier identifier = null;
-		
-		switch(identifierType) {
-		case TICKER:
-			identifier = new Ticker(instrument,name);
-			break;
-		case RIC:
-			identifier = new Ric(instrument,name);
-			break;
-		case SEDOL:
-			identifier = new Sedol(instrument,name);
-			break;
+		Identifier identifier = instrument.getIdentifier(name);
+
+		if(identifier == null) {
+			switch(identifierType) {
+			case TICKER:
+				identifier = new Ticker(instrument,name);
+				break;
+			case RIC:
+				identifier = new Ric(instrument,name);
+				break;
+			case SEDOL:
+				identifier = new Sedol(instrument,name);
+				break;
+			}
 		}
 		return identifier;		
 	}
-	
+
 	public IInstrument addIdentifier(IInstrument instrument,String name) {
 		IdentifierType idType;
 		if(instrument instanceof FX)
@@ -268,11 +275,11 @@ public class InstrumentFactory {
 			idType = IdentifierType.guess(name);
 		return addIdentifier(instrument,idType,name,false);
 	}
-	
+
 	public IInstrument addIdentifier(IInstrument instrument,IdentifierType idType,String name) {
 		return addIdentifier(instrument,idType,name,false);
 	}
-	
+
 	public IInstrument addIdentifier(IInstrument instrument,IdentifierType idType,String name,boolean makePrimary) {
 		Identifier id = makeIdentifier(instrument,idType,name);
 		instrument.getIdentifiers().add(id);
@@ -281,6 +288,45 @@ public class InstrumentFactory {
 			instrument.setPrimaryIdentifierType(idType);
 		return instrument;
 	}
-	
-	
+
+	public Stream<IInstrument> instrumentsForPortfolioUniverse(String[] universe) {
+		return portfolioSetFromStringArray(universe).stream().flatMap(p -> p.getComposition().stream()).distinct();
+	}
+
+	public Stream<IInstrument> instrumentsForPortfolioUniverse(Collection<IPortfolio> universe) {
+		return CollectionUtils.emptyIfNull(universe).stream().flatMap(p -> p.getComposition().stream()).distinct();
+	}
+
+	public Predicate<IInstrument> isOfType(InstrumentType type) {
+		return i -> i.getInstrumentType().equals(type);
+	}
+
+	public Function<IInstrument,Identifier> mapToIdentifier(IdentifierType idType) {
+		return i -> i.getIdentifier(idType);
+	}
+
+	public Stream<Identifier> identifiersForPortfolioUniverseAndInstrumentType(String[] universe,InstrumentType instrumentType,IdentifierType identifierType) {
+		return identifiersForPortfolioUniverseAndInstrumentType(portfolioSetFromStringArray(universe),instrumentType,identifierType);
+	}
+
+	public Stream<Identifier> identifiersForPortfolioUniverseAndInstrumentType(Collection<IPortfolio> universe,InstrumentType instrumentType,IdentifierType identifierType) {
+		return instrumentsForPortfolioUniverse(CollectionUtils.emptyIfNull(universe))
+				.filter(CoreConfig.services().instrumentFactory().isOfType(instrumentType))
+				.map(CoreConfig.services().instrumentFactory().mapToIdentifier(identifierType));
+	}
+
+	public Set<IPortfolio> portfolioSetFromStringArray(String[] portfolios) {
+		Set<IPortfolio> set = new HashSet<IPortfolio>();
+
+		for(String portfolio : ArrayUtils.nullToEmpty(portfolios)) {
+			if(CoreConfig.services().instrumentFactory().hasInstrument(portfolio)) {
+				IPortfolio iPortfolio = (IPortfolio) CoreConfig.services().instrumentFactory().getInstrument(portfolio);
+				set.add(iPortfolio);
+			}
+		}
+
+		return set;
+	}
+
+
 }

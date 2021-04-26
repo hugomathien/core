@@ -25,9 +25,8 @@ public class MarketDataFunctions {
 			t -> t.getMarketData().getHistorical().getTickData().getTimeSeries();
 
 
-	public static Function<Instrument,TimeSeries<LocalDate,Day>> getEodTimeSeries = 
+	public static Function<Instrument,TimeSeries<Instant,Day>> getEodTimeSeries = 
 			t -> t.getMarketData().getHistorical().getEodData().getTimeSeries();
-
 
 	public static BiFunction<Instrument,Integer,TimeSeries<Instant,Bar>> getBarTimeSeries = 
 			(t,u) -> t.getMarketData().getHistorical().getBarData().getTimeSeries(u);

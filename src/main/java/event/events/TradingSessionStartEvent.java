@@ -1,4 +1,4 @@
-package events;
+package event.events;
 
 import java.time.Instant;
 
@@ -6,9 +6,9 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import eventprocessors.CoreEventType;
-import finance.springBean.Exchange;
-import finance.springBean.TradingSession;
+import event.processing.CoreEventType;
+import finance.misc.Exchange;
+import finance.misc.TradingSession;
 
 @Component
 @Scope("prototype")

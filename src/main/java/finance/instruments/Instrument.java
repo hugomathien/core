@@ -3,19 +3,18 @@ package finance.instruments;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.temporal.Temporal;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import exceptions.MarketDataMissingException;
-import finance.identifiers.IIdentifier;
 import finance.identifiers.Identifier;
 import finance.identifiers.IdentifierType;
 import finance.identifiers.Ric;
 import finance.identifiers.Ticker;
-import finance.springBean.Exchange;
+import finance.misc.Exchange;
 import marketdata.MarketData;
 import marketdata.MarketDataFunctions;
 import marketdata.container.MarketDataContainerEnum;
@@ -28,14 +27,14 @@ public abstract class Instrument implements IInstrument {
 	private IdentifierType primaryIdentifierType = CoreConfig.PRIMARY_IDENTIFIER_TYPE;
 	private final MarketData marketData;
 	private final Map<Field,Object> staticData;
-	private final List<IIdentifier> identifiers;
+	private final Set<Identifier> identifiers;
 	private String currency;
 	transient private Exchange exchange;
 	
 	public Instrument() {
 		marketData = new MarketData();
-	staticData = new HashMap<Field,Object>();
-		identifiers = new ArrayList<IIdentifier>();
+		staticData = new HashMap<Field,Object>();
+		identifiers = new HashSet<Identifier>();
 
 	}
 	
@@ -43,10 +42,14 @@ public abstract class Instrument implements IInstrument {
 		return this.getIdentifier(this.primaryIdentifierType);
 	}
 	
+	public Identifier getIdentifier(String name) {
+		return this.getIdentifiers().stream().filter(i -> i.getName().equals(name)).findAny().orElse(null);
+	}
+	
 	public Identifier getIdentifier(IdentifierType type) {
 		Identifier returnID = null;
-		for(IIdentifier identifier : this.getIdentifiers()) {
-			if(identifier.getType().equals(type))
+		for(Identifier identifier : this.getIdentifiers()) {
+			if(identifier.getType().equals(type)) // TODO: Handling of multiple identifiers of the same type ? Change of tickers etc...
 				returnID = (Identifier) identifier;
 		}
 		
@@ -77,7 +80,7 @@ public abstract class Instrument implements IInstrument {
 		return staticData;
 	}
 
-	public List<IIdentifier> getIdentifiers() {
+	public Set<Identifier> getIdentifiers() {
 		return identifiers;
 	}
 
@@ -105,7 +108,7 @@ public abstract class Instrument implements IInstrument {
 	
 	private Exchange guessExchange() {
 		Exchange exchange = null;
-		for(IIdentifier identifier : this.getIdentifiers()) {
+		for(Identifier identifier : this.getIdentifiers()) {
 			exchange = identifier.guessExchange();
 			if(exchange != null)
 				break;

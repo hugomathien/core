@@ -1,7 +1,6 @@
-package eventprocessors;
+package event.processing;
 
 import java.time.Instant;
-import java.time.LocalDate;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -13,17 +12,17 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
 
-import events.Event;
-import events.InstrumentDelistEvent;
-import events.InstrumentUpdateEvent;
-import events.MarketDataEventBar;
-import events.MarketDataEventDay;
-import events.MarketDataEventSpot;
-import events.MarketDataEventTick;
-import events.NewInstrumentEvent;
-import events.PortfolioCompositionEvent;
-import events.TimerEvent;
-import events.TradingSessionEvent;
+import event.events.Event;
+import event.events.InstrumentDelistEvent;
+import event.events.InstrumentUpdateEvent;
+import event.events.MarketDataEventBar;
+import event.events.MarketDataEventDay;
+import event.events.MarketDataEventSpot;
+import event.events.MarketDataEventTick;
+import event.events.NewInstrumentEvent;
+import event.events.PortfolioCompositionEvent;
+import event.events.TimerEvent;
+import event.events.TradingSessionEvent;
 import exceptions.DataQueryException;
 import exceptions.DataServiceStartException;
 import finance.instruments.InstrumentFactory;
@@ -34,6 +33,7 @@ import marketdata.HistoricalData;
 @Lazy(false)
 public class CoreEventListeners {
 	@Autowired
+	@Lazy
 	private InstrumentFactory instrumentFactory;
 	
 	public CoreEventListeners() {}
@@ -65,10 +65,10 @@ public class CoreEventListeners {
 	
 	@EventListener(condition = "#event.eventType.name() == 'DAY'")
 	@Order(Ordered.HIGHEST_PRECEDENCE)
-	public void bar(MarketDataEventDay event) {
+	public void day(MarketDataEventDay event) {
 		if(event.getField().valueIsValid(event.getValue())) {
 			HistoricalData historicalData = event.getInstrument().getMarketData().getHistorical();
-			historicalData.getEodData().getEod((LocalDate) event.getMarketDataEndTimestamp()).put(event.getField(), event.getValue());
+			historicalData.getEodData().getEod((Instant) event.getMarketDataEndTimestamp()).put(event.getField(), event.getValue());
 		}
 	}
 	
@@ -101,7 +101,7 @@ public class CoreEventListeners {
 	@EventListener(condition = "#event.eventType.name() == 'PORTFOLIO_COMPOSITION'")
 	@Order(Ordered.HIGHEST_PRECEDENCE)
 	public void portfolioComposition(PortfolioCompositionEvent event) {
-		event.getPortfolio().addMember(event.getMember(),event.getWeight());
+		event.getPortfolio().addMember(event.getMember(),event.getWeight()); // TODO: Needs to also remove members otherwise it creates an expanding universe (make that optional) !
 	}
 	
 	@EventListener

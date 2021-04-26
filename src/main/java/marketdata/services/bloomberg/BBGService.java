@@ -1,4 +1,4 @@
-package marketdata.services.bloomberg.services;
+package marketdata.services.bloomberg;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -147,7 +147,7 @@ public abstract class BBGService extends AbstractDataService {
 		return javadt.toInstant();
 	}
 	
-	public LocalDate convertBbgToJavaLocalDate(Datetime bbgdt) {
+	public static LocalDate convertBbgToJavaLocalDate(Datetime bbgdt) {
 		int year = bbgdt.year();
 		int month = bbgdt.month();
 		int day = bbgdt.dayOfMonth();
@@ -156,7 +156,7 @@ public abstract class BBGService extends AbstractDataService {
 		return javadt;
 	}
 	
-	public String convertJavaZonedDateTimeToBBGString(ZonedDateTime javadt) {
+	public static String convertJavaZonedDateTimeToBBGString(ZonedDateTime javadt) {
 		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 		DateTimeFormatter timef = DateTimeFormatter.ofPattern("HH:mm:ss");
 		String bbgDt = dtf.format(javadt.withZoneSameInstant(ZoneId.of("UTC")));

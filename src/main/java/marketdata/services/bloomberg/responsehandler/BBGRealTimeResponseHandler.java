@@ -10,11 +10,11 @@ import com.bloomberglp.blpapi.EventHandler;
 import com.bloomberglp.blpapi.Session;
 
 import config.CoreConfig;
-import eventprocessors.EventPriorityQueue;
-import events.MarketDataEventFactory;
+import event.events.MarketDataEventFactory;
+import event.processing.EventPriorityQueue;
 import finance.instruments.InstrumentFactory;
 import marketdata.services.base.AbstractResponseHandler;
-import marketdata.services.bloomberg.services.BBGRealTimeDataService;
+import marketdata.services.bloomberg.BBGRealTimeDataService;
 
 @Service
 @Scope("singleton")

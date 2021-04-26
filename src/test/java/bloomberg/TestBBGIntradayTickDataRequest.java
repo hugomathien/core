@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
+import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
@@ -24,10 +26,10 @@ import marketdata.services.base.RequestType;
 @ContextConfiguration(classes = CoreConfig.class)
 public class TestBBGIntradayTickDataRequest {
 
-	private DataRequest request;
+	private DataRequest<Object> request;
 
-	@Test
-	public void testSampleService() throws DataServiceStartException, DataQueryException {
+	@Before
+	public void setup() throws DataServiceStartException, DataQueryException {
 		request = new DataRequest.Builder<>()
 		.dataService(DataServiceEnum.BLOOMBERG)
 		.backfill(false)
@@ -40,6 +42,43 @@ public class TestBBGIntradayTickDataRequest {
 		.build();
 		
 		request.query();
+		CoreConfig.services().run();
+	}
+	
+	
+	@Test
+	public void testSpotDataFromTick() {
+		int totalFieldMapSize = CoreConfig.services().instrumentFactory()
+				.getInstrument("FP FP")
+				.getMarketData()
+				.getSpot()
+				.getFieldsMap()
+				.size();
+
+		int vodafoneFieldMap = CoreConfig.services().instrumentFactory()
+				.getInstrument("VOD LN")
+				.getMarketData()
+				.getSpot()
+				.getFieldsMap()
+				.size();
+
+		Assert.assertEquals(totalFieldMapSize,1);
+		Assert.assertEquals(vodafoneFieldMap,1);
+		
+		
+		System.out.println("FP FP " + CoreConfig.services().instrumentFactory()
+				.getInstrument("FP FP")
+				.getMarketData()
+				.getSpot()
+				.getFieldsMap()
+				.toString());
+		
+		System.out.println("VOD LN" + CoreConfig.services().instrumentFactory()
+				.getInstrument("VOD LN")
+				.getMarketData()
+				.getSpot()
+				.getFieldsMap()
+				.toString());
 	}
 
 }
