@@ -3,10 +3,8 @@ package marketdata.services.bloomberg.responsehandler;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,12 +22,11 @@ import com.bloomberglp.blpapi.MessageIterator;
 import com.bloomberglp.blpapi.Name;
 import com.bloomberglp.blpapi.Request;
 import com.bloomberglp.blpapi.Session;
-import com.bloomberglp.blpapi.impl.iF;
 
 import config.CoreConfig;
 import event.events.MarketDataEventFactory;
 import event.events.PortfolioCompositionEvent;
-import event.processing.EventPriorityQueue;
+import event.sequencing.processing.EventPriorityQueue;
 import finance.identifiers.IdentifierType;
 import finance.instruments.IInstrument;
 import finance.instruments.IPortfolio;

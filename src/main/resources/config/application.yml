@@ -1,0 +1,6 @@
+logging:
+  level:
+    root: DEBUG
+config:
+  fieldmapper: "classpath:config/fieldmapper.csv"
+  core: "classpath:/config/replay.core.config.xml"

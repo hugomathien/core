@@ -7,8 +7,11 @@ import java.util.concurrent.TimeoutException;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -22,10 +25,12 @@ import marketdata.container.Day;
 import marketdata.services.base.DataRequest;
 import marketdata.services.base.DataServiceEnum;
 import marketdata.services.base.RequestType;
+import org.springframework.test.context.junit4.SpringRunner;
 import utils.TimeSeries;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = CoreConfig.class)
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = CoreConfig.class)
+@FixMethodOrder(MethodSorters.DEFAULT)
 public class TestDataRequestSequencer {
 
 	private AbstractEventSequencer<DataRequest<Object>> sequencer;
@@ -37,7 +42,7 @@ public class TestDataRequestSequencer {
 		.fields("PX_LAST","VOLUME")
 		.instrumentType(InstrumentType.SingleStock)
 		.identifierType(IdentifierType.TICKER)
-		.identifiers("FP FP","VOD LN")
+		.identifiers("TTE FP","VOD LN")
 		.backfill(true)
 		.dataService(DataServiceEnum.RANDOMGEN)
 		.requestType(RequestType.HistoricalDataRequest)
@@ -54,9 +59,9 @@ public class TestDataRequestSequencer {
 
 	@Test
 	public void testTotalDataSeriesSize() {
-		IInstrument total = CoreConfig.services().getInstrument("FP FP");
+		IInstrument total = CoreConfig.services().getInstrument("TTE FP");
 		TimeSeries<Instant,Day> ts = total.getMarketData().getHistorical().getEodData().getTimeSeries();
-		System.out.println("FP FP Time Series");
+		System.out.println("TTE FP Time Series");
 		ts.printTimeSeries();
 		Assert.assertEquals(33,ts.size());
 	}

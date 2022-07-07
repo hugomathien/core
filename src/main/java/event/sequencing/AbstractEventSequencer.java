@@ -18,7 +18,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import config.CoreConfig;
 import event.events.TimerEvent;
-import event.processing.EventPriorityQueue;
+import event.sequencing.processing.EventPriorityQueue;
 import utils.MiscUtils;
 
 public abstract class AbstractEventSequencer<S extends Sequenceable> {
@@ -204,7 +204,15 @@ public abstract class AbstractEventSequencer<S extends Sequenceable> {
 	public void setInitialWindowLookBack(String initialWindowLookBack) {
 		this.initialWindowLookBack = Duration.parse(initialWindowLookBack);
 	}
-	
+
+	public Duration getWindowLookForward() {
+		return windowLookForward;
+	}
+
+	public void setWindowLookForward(Duration windowLookForward) {
+		this.windowLookForward = windowLookForward;
+	}
+
 	public Clock getClock() {
 		return clock;
 	}

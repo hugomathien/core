@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import config.CoreConfig;
 import event.events.TimerEvent;
-import event.processing.CoreEventType;
+import event.sequencing.processing.CoreEventType;
 import finance.identifiers.IdentifierType;
 import finance.instruments.InstrumentType;
 import marketdata.services.base.DataRequest;
@@ -111,7 +111,95 @@ public class DataRequestSequencer<K> extends AbstractEventSequencer<DataRequest<
 		if(overrides.containsKey(RequestOverrides.END_DATE_OVERRIDE))		
 			overrides.put(RequestOverrides.END_DATE_OVERRIDE, LocalDate.from(end));	
 	}
-	
+
+	public DataServiceEnum getDataService() {
+		return dataService;
+	}
+
+	public void setDataService(DataServiceEnum dataService) {
+		this.dataService = dataService;
+	}
+
+	public RequestType getRequestType() {
+		return requestType;
+	}
+
+	public void setRequestType(RequestType requestType) {
+		this.requestType = requestType;
+	}
+
+	public InstrumentType getInstrumentType() {
+		return instrumentType;
+	}
+
+	public void setInstrumentType(InstrumentType instrumentType) {
+		this.instrumentType = instrumentType;
+	}
+
+	public IdentifierType getIdentifierType() {
+		return identifierType;
+	}
+
+	public void setIdentifierType(IdentifierType identifierType) {
+		this.identifierType = identifierType;
+	}
+
+	public String[] getIdentifiers() {
+		return identifiers;
+	}
+
+	public void setIdentifiers(String[] identifiers) {
+		this.identifiers = identifiers;
+	}
+
+	public String[] getFields() {
+		return fields;
+	}
+
+	public void setFields(String[] fields) {
+		this.fields = fields;
+	}
+
+	public String[] getUniverse() {
+		return universe;
+	}
+
+	public void setUniverse(String[] universe) {
+		this.universe = universe;
+	}
+
+	public Map<RequestParameters, Object> getParameters() {
+		return parameters;
+	}
+
+	public void setParameters(Map<RequestParameters, Object> parameters) {
+		this.parameters = parameters;
+	}
+
+	public Map<RequestOverrides, Object> getOverrides() {
+		return overrides;
+	}
+
+	public void setOverrides(Map<RequestOverrides, Object> overrides) {
+		this.overrides = overrides;
+	}
+
+	public boolean isBackfill() {
+		return backfill;
+	}
+
+	public void setBackfill(boolean backfill) {
+		this.backfill = backfill;
+	}
+
+	public boolean isSubscribe() {
+		return subscribe;
+	}
+
+	public void setSubscribe(boolean subscribe) {
+		this.subscribe = subscribe;
+	}
+
 	public static class Builder<K> extends AbstractEventSequencer.Builder<DataRequest<K>> {
 		private DataServiceEnum dataService;
 		private RequestType requestType;

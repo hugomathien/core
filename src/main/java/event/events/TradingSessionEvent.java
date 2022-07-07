@@ -2,7 +2,7 @@ package event.events;
 
 import java.time.Instant;
 
-import event.processing.EventType;
+import event.sequencing.processing.EventType;
 import finance.misc.Exchange;
 import finance.misc.TradingSession;
 

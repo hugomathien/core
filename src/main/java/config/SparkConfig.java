@@ -17,7 +17,6 @@ import streaming.source.StreamQueryWrapper;
 import utils.Spark;
 
 @Configuration
-@PropertySource("classpath:/config/spark.properties")
 public class SparkConfig {
 
 	@Bean

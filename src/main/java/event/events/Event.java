@@ -4,7 +4,7 @@ import java.time.Instant;
 
 import org.springframework.context.ApplicationEvent;
 
-import event.processing.EventType;
+import event.sequencing.processing.EventType;
 
 public abstract class Event extends ApplicationEvent {
 	

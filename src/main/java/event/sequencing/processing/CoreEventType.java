@@ -1,4 +1,4 @@
-package event.processing;
+package event.sequencing.processing;
 
 public enum CoreEventType implements EventType {
 DATA_REQUEST,

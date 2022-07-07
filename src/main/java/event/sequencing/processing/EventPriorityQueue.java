@@ -1,4 +1,4 @@
-package event.processing;
+package event.sequencing.processing;
 
 import java.util.Comparator;
 import java.util.PriorityQueue;

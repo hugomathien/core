@@ -4,7 +4,7 @@ import java.time.Instant;
 
 import org.springframework.core.Ordered;
 
-import event.processing.EventType;
+import event.sequencing.processing.EventType;
 import event.sequencing.AbstractEventSequencer;
 import event.sequencing.Sequenceable;
 

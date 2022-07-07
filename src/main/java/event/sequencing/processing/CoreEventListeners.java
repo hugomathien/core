@@ -1,9 +1,9 @@
-package event.processing;
+package event.sequencing.processing;
 
 import java.time.Instant;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import config.CoreConfig;
+import org.apache.logging.log4j.Level;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
@@ -42,7 +42,7 @@ public class CoreEventListeners {
 	@EventListener
 	@Order(Ordered.HIGHEST_PRECEDENCE)
 	public void logEvent(Event event) {
-		Logger.getRootLogger().log(Level.INFO, "Received @"+ event.toString());
+		CoreConfig.logger.log(Level.INFO, "Received @"+ event.toString());
 	}
 	
 	@EventListener(condition = "#event.eventType.name() == 'BAR'")

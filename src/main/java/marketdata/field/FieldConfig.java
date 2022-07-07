@@ -24,10 +24,8 @@ import marketdata.services.base.DataServiceEnum;
 @Component
 @Lazy(false)
 public class FieldConfig {
-	@Autowired
-	CoreConfig coreConfig;
-	@Value("classpath:config/fieldmapper.csv")
-	Resource resourceFile;
+	@Value("${config.fieldmapper}")
+	private Resource resourceFile;
 	private HashMap<DataServiceEnum,HashMap<String,Field>> serviceFieldMap;
 	
 	public FieldConfig() {

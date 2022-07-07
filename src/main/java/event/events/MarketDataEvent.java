@@ -5,8 +5,7 @@ import java.time.temporal.Temporal;
 
 import org.springframework.core.Ordered;
 
-import event.processing.CoreEventType;
-import event.processing.EventType;
+import event.sequencing.processing.CoreEventType;
 import finance.instruments.IInstrument;
 import marketdata.field.Field;
 import marketdata.services.base.DataServiceEnum;

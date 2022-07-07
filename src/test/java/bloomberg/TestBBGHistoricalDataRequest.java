@@ -4,9 +4,12 @@ import java.time.LocalDate;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -21,9 +24,11 @@ import marketdata.services.base.DataServiceEnum;
 import marketdata.services.base.RequestParameters;
 import marketdata.services.base.RequestType;
 import marketdata.services.bloomberg.BBGReferenceDataService;
+import org.springframework.test.context.junit4.SpringRunner;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = CoreConfig.class)
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = CoreConfig.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestBBGHistoricalDataRequest {
 
 	private DataRequest<?> request;
@@ -38,7 +43,7 @@ public class TestBBGHistoricalDataRequest {
 				.parameters(RequestParameters.startDate, LocalDate.of(2021,4,5))
 				.parameters(RequestParameters.endDate, LocalDate.of(2021, 4, 9))
 				.identifierType(IdentifierType.TICKER)
-				.identifiers(InstrumentType.SingleStock, new String[]{"FP FP","VOD LN"})
+				.identifiers(InstrumentType.SingleStock, new String[]{"TTE FP","VOD LN"})
 				.requestType(RequestType.HistoricalDataRequest)
 				.build();
 
@@ -49,7 +54,7 @@ public class TestBBGHistoricalDataRequest {
 	@Test
 	public void testFieldMapSize() throws DataServiceStartException, DataQueryException {	
 		int totalFieldMapSize = CoreConfig.services().instrumentFactory()
-				.getInstrument("FP FP")
+				.getInstrument("TTE FP")
 				.getMarketData()
 				.getSpot()
 				.getFieldsMap()
@@ -69,7 +74,7 @@ public class TestBBGHistoricalDataRequest {
 	@Test
 	public void testSpotPriceValue() throws DataServiceStartException, DataQueryException {	
 		double totalSpotPrice = (double) CoreConfig.services().instrumentFactory()
-				.getInstrument("FP FP")
+				.getInstrument("TTE FP")
 				.getMarketData()
 				.getSpot()
 				.get("PX_LAST");

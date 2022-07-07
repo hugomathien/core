@@ -6,8 +6,11 @@ import java.time.ZonedDateTime;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -21,9 +24,11 @@ import marketdata.services.base.DataRequest;
 import marketdata.services.base.DataServiceEnum;
 import marketdata.services.base.RequestParameters;
 import marketdata.services.base.RequestType;
+import org.springframework.test.context.junit4.SpringRunner;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = CoreConfig.class)
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = CoreConfig.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestBBGIntradayTickDataRequest {
 
 	private DataRequest<Object> request;

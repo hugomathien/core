@@ -4,6 +4,9 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Map;
 
+import marketdata.field.FieldConfig;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.spark.sql.SparkSession;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,9 +22,8 @@ import org.springframework.context.annotation.ImportResource;
 import org.springframework.context.annotation.Scope;
 
 import event.events.MarketDataEventFactory;
-import event.processing.EventPriorityQueue;
+import event.sequencing.processing.EventPriorityQueue;
 import event.sequencing.DataRequestSequencer;
-import event.sequencing.DatasetPipelineSequencer;
 import event.sequencing.InstrumentStateCaptureSequencer;
 import event.sequencing.StreamQuerySequencer;
 import finance.identifiers.IdentifierType;
@@ -40,12 +42,11 @@ import marketdata.services.bloomberg.responsehandler.BBGRealTimeResponseHandler;
 import marketdata.services.bloomberg.responsehandler.BBGReferenceResponseHandler;
 import marketdata.services.randomgen.RandomGeneratorReferenceDataService;
 import marketdata.services.randomgen.responsehandler.RandomGeneratorReferenceResponseHandler;
-import streaming.source.MemoryStreamWrapper;
 import utils.Spark;
 
 @Configuration
-@Import({FlatFileDataConfig.class,SparkConfig.class})
-@ImportResource({"classpath:/config/bart.core.config.xml"})
+@ImportResource({"${config.core}"})
+@Import({FlatFileDataConfig.class,SparkConfig.class, FieldConfig.class})
 @ComponentScan(basePackages = {
 		"event.events",
 		"event.processing",
@@ -59,8 +60,9 @@ public class CoreConfig implements ApplicationContextAware {
 	public static IdentifierType PRIMARY_IDENTIFIER_TYPE;
 	public static ZoneId GLOBAL_ZONE_ID = ZoneId.systemDefault();
 	public static LocalDate GLOBAL_START_DATE;
-	public static LocalDate GLOBAL_END_DATE; 
-	
+	public static LocalDate GLOBAL_END_DATE;
+	public static Logger logger = LogManager.getLogger();
+
 	@Autowired
 	InstrumentFactory factory;
 	@Autowired(required = false)
@@ -112,13 +114,7 @@ public class CoreConfig implements ApplicationContextAware {
 	public StreamQuerySequencer getStreamingQuerySequencer(StreamQuerySequencer.Builder builder) {
 		return new StreamQuerySequencer(builder);
 	}
-	
-	@Bean
-	@Scope("prototype")
-	public DatasetPipelineSequencer getDatasetPipelineSequencer(DatasetPipelineSequencer.Builder builder) {
-		return new DatasetPipelineSequencer(builder);
-	}
-	
+
 	
 	@Bean
 	@Scope("prototype")

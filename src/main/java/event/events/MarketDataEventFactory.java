@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
-import event.processing.EventPriorityQueue;
+import event.sequencing.processing.EventPriorityQueue;
 import finance.instruments.IInstrument;
 import marketdata.container.MarketDataContainerEnum;
 import marketdata.field.Field;

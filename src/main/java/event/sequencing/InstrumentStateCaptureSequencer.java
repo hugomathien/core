@@ -19,7 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import config.CoreConfig;
 import event.events.TimerEvent;
-import event.processing.CoreEventType;
+import event.sequencing.processing.CoreEventType;
 import exceptions.MarketDataMissingException;
 import finance.identifiers.IdentifierType;
 import finance.instruments.IInstrument;

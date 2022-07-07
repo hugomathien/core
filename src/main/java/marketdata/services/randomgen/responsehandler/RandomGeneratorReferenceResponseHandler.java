@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 
 import config.CoreConfig;
 import event.events.MarketDataEventFactory;
-import event.processing.EventPriorityQueue;
+import event.sequencing.processing.EventPriorityQueue;
 import finance.identifiers.Identifier;
 import finance.instruments.IInstrument;
 import finance.instruments.Instrument;

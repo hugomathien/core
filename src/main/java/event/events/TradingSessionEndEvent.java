@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import event.processing.CoreEventType;
+import event.sequencing.processing.CoreEventType;
 import finance.misc.Exchange;
 import finance.misc.TradingSession;
 

@@ -11,7 +11,7 @@ import com.bloomberglp.blpapi.Session;
 
 import config.CoreConfig;
 import event.events.MarketDataEventFactory;
-import event.processing.EventPriorityQueue;
+import event.sequencing.processing.EventPriorityQueue;
 import finance.instruments.InstrumentFactory;
 import marketdata.services.base.AbstractResponseHandler;
 import marketdata.services.bloomberg.BBGRealTimeDataService;

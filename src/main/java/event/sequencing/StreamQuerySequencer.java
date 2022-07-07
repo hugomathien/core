@@ -13,7 +13,7 @@ import org.apache.spark.sql.Row;
 
 import config.CoreConfig;
 import event.events.TimerEvent;
-import event.processing.CoreEventType;
+import event.sequencing.processing.CoreEventType;
 import streaming.source.MemoryStreamWrapper;
 import streaming.source.StreamQueryWrapper;
 
