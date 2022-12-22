@@ -29,7 +29,7 @@ public abstract class Instrument implements IInstrument {
 	private final Map<Field,Object> staticData;
 	private final Set<Identifier> identifiers;
 	private String currency;
-	transient private Exchange exchange;
+	private Exchange exchange; // TODO: only listed instrument can have an exchange
 	
 	public Instrument() {
 		marketData = new MarketData();
@@ -105,11 +105,16 @@ public abstract class Instrument implements IInstrument {
 		else
 			return null;
 	}
-	
+
+
+	public String replaceIdentifierWithComposite(IdentifierType idType,String id) {
+		return this.instrumentType.replaceIdentifierWithComposite(idType,id);
+	}
+
 	private Exchange guessExchange() {
 		Exchange exchange = null;
 		for(Identifier identifier : this.getIdentifiers()) {
-			exchange = identifier.guessExchange();
+			exchange = this.instrumentType.guessExchange(identifier.getType(),identifier.getName());
 			if(exchange != null)
 				break;
 		}
@@ -122,6 +127,11 @@ public abstract class Instrument implements IInstrument {
 			exchange = guessExchange();
 		
 		return exchange;
+	}
+
+	public FX getFX(String rightCurrency) {
+		FX fx = CoreConfig.services().getOrMakeFx(this.currency,currency);
+		return fx;
 	}
 	
 	public void setExchange(Exchange exchange) {

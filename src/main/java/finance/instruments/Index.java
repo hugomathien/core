@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.TreeSet;
 
 import config.CoreConfig;
+import event.events.PortfolioCompositionEvent;
 import finance.identifiers.IdentifierType;
 
 public class Index extends Instrument implements IPortfolio {
@@ -54,6 +55,14 @@ public class Index extends Instrument implements IPortfolio {
 		portfolio.setComposition(composition);
 	}
 
+	public TreeSet<IInstrument> getHistoricalComposition() {
+		return this.portfolio.getHistoricalComposition();
+	}
+
+	public void setHistoricalComposition(TreeSet<IInstrument> historicalComposition) {
+		this.portfolio.setHistoricalComposition(historicalComposition);
+	}
+
 	public void addMember(IInstrument instrument) {
 		portfolio.addMember(instrument);
 	}
@@ -70,6 +79,11 @@ public class Index extends Instrument implements IPortfolio {
 	@Override
 	public void setLastCompositionUpdate(Instant lastCompositionUpdate) {
 		this.setLastCompositionUpdate(lastCompositionUpdate);
+	}
+
+	@Override
+	public void updateComposition(PortfolioCompositionEvent event) {
+		this.portfolio.updateComposition(event);
 	}
 	
 }

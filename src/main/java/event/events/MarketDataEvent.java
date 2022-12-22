@@ -2,10 +2,11 @@ package event.events;
 
 import java.time.Instant;
 import java.time.temporal.Temporal;
+import java.util.StringJoiner;
 
 import org.springframework.core.Ordered;
 
-import event.sequencing.processing.CoreEventType;
+import event.processing.CoreEventType;
 import finance.instruments.IInstrument;
 import marketdata.field.Field;
 import marketdata.services.base.DataServiceEnum;
@@ -84,5 +85,13 @@ public abstract class MarketDataEvent<MarketDataContainer> extends Event {
 	public void setValue(Object value) {
 		this.value = value;
 	}
-	
+
+	public String toString() {
+		return new StringBuilder()
+				.append(super.toString())
+				.append("Instrument="+this.instrument)
+				.append("Field="+this.field.name())
+				.append("Value="+this.value.toString())
+				.toString();
+	}
 }

@@ -4,6 +4,12 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Map;
 
+import event.timers.TimerDataframeWriterBatch;
+import event.timers.TimerDataframeWriterStream;
+import event.timers.Clock;
+import event.timers.TimerDataRequest;
+import event.timers.TimerStateToDataframe;
+import finance.misc.ExchangeFactory;
 import marketdata.field.FieldConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,18 +20,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.ImportResource;
-import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.*;
 
 import event.events.MarketDataEventFactory;
-import event.sequencing.processing.EventPriorityQueue;
-import event.sequencing.DataRequestSequencer;
-import event.sequencing.InstrumentStateCaptureSequencer;
-import event.sequencing.StreamQuerySequencer;
+import event.processing.EventPriorityQueue;
 import finance.identifiers.IdentifierType;
 import finance.instruments.ETF;
 import finance.instruments.FX;
@@ -38,10 +36,10 @@ import finance.instruments.SingleStock;
 import finance.misc.Exchange;
 import marketdata.services.bloomberg.BBGRealTimeDataService;
 import marketdata.services.bloomberg.BBGReferenceDataService;
-import marketdata.services.bloomberg.responsehandler.BBGRealTimeResponseHandler;
-import marketdata.services.bloomberg.responsehandler.BBGReferenceResponseHandler;
+import marketdata.services.bloomberg.BBGRealTimeResponseHandler;
+import marketdata.services.bloomberg.BBGReferenceResponseHandler;
 import marketdata.services.randomgen.RandomGeneratorReferenceDataService;
-import marketdata.services.randomgen.responsehandler.RandomGeneratorReferenceResponseHandler;
+import marketdata.services.randomgen.RandomGeneratorReferenceResponseHandler;
 import utils.Spark;
 
 @Configuration
@@ -52,6 +50,7 @@ import utils.Spark;
 		"event.processing",
 		"event.sequencing",
 		"marketdata",
+		"finance.misc",
 		"finance.instruments",
 		"marketdata.field",
 		"marketdata.services"})
@@ -61,12 +60,13 @@ public class CoreConfig implements ApplicationContextAware {
 	public static ZoneId GLOBAL_ZONE_ID = ZoneId.systemDefault();
 	public static LocalDate GLOBAL_START_DATE;
 	public static LocalDate GLOBAL_END_DATE;
+	public static String GLOBAL_REFERENCE_CURRENCY;
 	public static Logger logger = LogManager.getLogger();
 
 	@Autowired
 	InstrumentFactory factory;
-	@Autowired(required = false)
-	public Map<String,Exchange> exchangeMicMap;
+	@Autowired
+	ExchangeFactory exchangeFactory;
 	@Autowired
 	public ApplicationEventPublisher publisher;
 	@Autowired
@@ -96,48 +96,68 @@ public class CoreConfig implements ApplicationContextAware {
 		return ctx.getBean(EventPriorityQueue.class);
 	}
 	
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Bean
+	@Lazy
 	@Scope("prototype")
-	public DataRequestSequencer<?> getDataRequestSequencer(DataRequestSequencer.Builder<?> builder) {
-		return new DataRequestSequencer(builder);
-	}
-	
-	@Bean
-	@Scope("prototype")
-	public InstrumentStateCaptureSequencer getInstrumentStateCaptureSequencer(InstrumentStateCaptureSequencer.Builder builder) {
-		return new InstrumentStateCaptureSequencer(builder);
-	}
-	
-	@Bean
-	@Scope("prototype")
-	public StreamQuerySequencer getStreamingQuerySequencer(StreamQuerySequencer.Builder builder) {
-		return new StreamQuerySequencer(builder);
+	public TimerDataRequest getDataRequestSequencer(TimerDataRequest.Builder builder) {
+		return new TimerDataRequest(builder);
 	}
 
-	
 	@Bean
+	@Lazy
 	@Scope("prototype")
-	public Exchange getExchange(String mic) {
-		if(mic == null)
-			return getExchange("OTC");
-		
-		if(exchangeMicMap.containsKey(mic))
-			return exchangeMicMap.get(mic);
-		else {
-			Exchange exch = new Exchange(mic);
-			this.exchangeMicMap.put(mic, exch);
-			return exch;
-		}
+	public TimerStateToDataframe getInstrumentStateCaptureSequencer(TimerStateToDataframe.Builder builder) {
+		return new TimerStateToDataframe(builder);
+	}
+
+	@Bean
+	@Lazy
+	@Scope("prototype")
+	public TimerDataframeWriterBatch getDfWriterBatch(TimerDataframeWriterBatch.Builder builder) {
+		return new TimerDataframeWriterBatch(builder);
+	}
+
+	@Bean
+	@Lazy
+	@Scope("prototype")
+	public TimerDataframeWriterStream getDfWriterStream(TimerDataframeWriterStream.Builder builder) {
+		return new TimerDataframeWriterStream(builder);
+	}
+
+	@Bean
+	@Lazy
+	@Scope("prototype")
+	public dataset.StateToDataframe getInstrumentStateCapture(dataset.StateToDataframe.Builder builder) {
+		return new dataset.StateToDataframe(builder);
+	}
+
+	@Bean
+	@Lazy
+	@Scope("prototype")
+	public Clock getClock() {
+		return new Clock();
+	}
+
+
+	public Exchange getExchange(String exchangeCode) {
+		return this.exchangeFactory.getExchange(exchangeCode);
 	}
 	
 	
-	// TODO: have instruments managed by spring ? How do we avoid name collision by dynamically giving spring id and names corresponding to the identifiers args ? 
+	// TODO: Create get or make instrument
 	public IInstrument getInstrument(String id) {
 		return factory.getInstrument(id);
 	}
-	
-	public SingleStock getSingleStock(String id) {
+	public IInstrument getOrMakeInstrument(InstrumentType instrumentType,String id) {
+		return factory.makeInstrument(instrumentType,id);
+	}
+
+	public IInstrument getOrMakeInstrument(InstrumentType instrumentType,IdentifierType idType,String id) {
+		return factory.makeInstrument(instrumentType,idType,id);
+	}
+
+
+	public SingleStock getOrMakeSingleStock(String id) {
 		if(factory.hasInstrument(id,InstrumentType.SingleStock))
 			return (SingleStock) factory.getInstrument(id);
 		else
@@ -164,12 +184,14 @@ public class CoreConfig implements ApplicationContextAware {
 		else
 			return (Index) factory.makeInstrument(InstrumentType.Index, id);
 	}
-	
+
+	public FX getOrMakeFx(String ccyPair) {
+		return factory.makeFx(ccyPair);
+	}
+
+
 	public FX getOrMakeFx(String ccyLeft,String ccyRight) {
-		if(factory.hasFx(ccyLeft,ccyRight))
-			return factory.getFx(ccyLeft,ccyRight);
-		else
-			return factory.makeFx(ccyLeft,ccyRight);
+		return factory.makeFx(ccyLeft,ccyRight);
 	}
 	
 	
@@ -197,25 +219,31 @@ public class CoreConfig implements ApplicationContextAware {
 		return ctx.getBean(BBGRealTimeResponseHandler.class);
 	}
 	
-	@Value("${clock.startDate}")
+	@Value("${config.clock.startDate}")
 	public void setGlobalStartDate(String startDate) {
 		GLOBAL_START_DATE = LocalDate.parse(startDate);
 	}
 	
-	@Value("${clock.endDate}")
+	@Value("${config.clock.endDate}")
 	public void setGlobalEndDate(String endDate) {
 		GLOBAL_END_DATE = LocalDate.parse(endDate);
 	}
 	
-	@Value("${clock.zoneId}")
+	@Value("${config.clock.zoneId}")
 	public void setGlobalZoneId(String zoneId) {
 		GLOBAL_ZONE_ID = ZoneId.of(zoneId);
 	}
+
+	@Value("${config.reference_currency}")
+	public void setGlobalReferenceCurrency(String reference_currency) {
+		GLOBAL_REFERENCE_CURRENCY = reference_currency;
+	}
 	
-	@Value("${instrument.primary.identifier.type}")
+	@Value("${config.instrument.primary_identifier_type}")
 	public void setPrimaryIdentifierType(String primaryIdentifierType) {
 		PRIMARY_IDENTIFIER_TYPE = IdentifierType.valueOf(primaryIdentifierType);
 	}
+
 	
 	public void run() {
 		eventQueue.pollAndPublishAll();

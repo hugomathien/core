@@ -1,8 +1,8 @@
 package marketdata;
 
-import marketdata.series.BarData;
-import marketdata.series.DayData;
-import marketdata.series.TickData;
+import marketdata.timeseries.BarData;
+import marketdata.timeseries.DayData;
+import marketdata.timeseries.TickData;
 
 
 public class HistoricalData {

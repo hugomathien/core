@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -43,8 +44,8 @@ public class InstrumentFactory {
 	public CoreConfig config;
 	@Autowired
 	private ApplicationEventPublisher publisher;
-	private Set<IInstrument> instrumentSet = new HashSet<IInstrument>(); // TODO: Needs concurrent ? Key and improve lookup time
-	private Set<Identifier> identifierSet = new HashSet<Identifier>(); // Needs concurrent ? TODO: Key and improve lookup time
+	private Set<IInstrument> instrumentSet = ConcurrentHashMap.newKeySet();
+	private Set<Identifier> identifierSet = ConcurrentHashMap.newKeySet();
 
 	public InstrumentFactory() {}
 
@@ -177,6 +178,9 @@ public class InstrumentFactory {
 			case Future:
 				instrument = new Future();
 				break;
+			case FX:
+				instrument = this.makeFx(securityName);
+				break;
 			default:
 				return null;
 			}			
@@ -239,6 +243,10 @@ public class InstrumentFactory {
 		return (FX) this.instrumentSet.stream().filter(i -> i.getInstrumentType().equals(FX)).filter(i -> ((FX) i).getCcyLeft().equals(ccyLeft) && ((FX) i).getCcyRight().equals(ccyRight)).findAny().orElse(null);
 	}
 
+	public FX makeFx(String ccyPair) {
+		return this.makeFx(ccyPair.substring(0,3),ccyPair.substring(3,6));
+	}
+
 	public FX makeFx(String ccyLeft,String ccyRight) {
 		if(this.hasFx(ccyLeft, ccyRight))
 			return getFx(ccyLeft, ccyRight);
@@ -289,14 +297,6 @@ public class InstrumentFactory {
 		return instrument;
 	}
 
-	public Stream<IInstrument> instrumentsForPortfolioUniverse(String[] universe) {
-		return portfolioSetFromStringArray(universe).stream().flatMap(p -> p.getComposition().stream()).distinct();
-	}
-
-	public Stream<IInstrument> instrumentsForPortfolioUniverse(Collection<IPortfolio> universe) {
-		return CollectionUtils.emptyIfNull(universe).stream().flatMap(p -> p.getComposition().stream()).distinct();
-	}
-
 	public Predicate<IInstrument> isOfType(InstrumentType type) {
 		return i -> i.getInstrumentType().equals(type);
 	}
@@ -305,28 +305,19 @@ public class InstrumentFactory {
 		return i -> i.getIdentifier(idType);
 	}
 
-	public Stream<Identifier> identifiersForPortfolioUniverseAndInstrumentType(String[] universe,InstrumentType instrumentType,IdentifierType identifierType) {
-		return identifiersForPortfolioUniverseAndInstrumentType(portfolioSetFromStringArray(universe),instrumentType,identifierType);
+
+	public Stream<IInstrument> instrumentsForPortfolioUniverse(String[] universe,boolean expandingUniverse) {
+		return Arrays.stream(ArrayUtils.nullToEmpty(universe))
+				.map(p -> (IPortfolio) CoreConfig.services().instrumentFactory().getInstrument(p))
+				.flatMap(p -> {
+			return expandingUniverse ? p.getHistoricalComposition().stream() : p.getComposition().stream();
+		}).distinct();
 	}
 
-	public Stream<Identifier> identifiersForPortfolioUniverseAndInstrumentType(Collection<IPortfolio> universe,InstrumentType instrumentType,IdentifierType identifierType) {
-		return instrumentsForPortfolioUniverse(CollectionUtils.emptyIfNull(universe))
-				.filter(CoreConfig.services().instrumentFactory().isOfType(instrumentType))
-				.map(CoreConfig.services().instrumentFactory().mapToIdentifier(identifierType));
+	public Stream<IInstrument> instrumentsForPortfolioUniverse(Collection<IPortfolio> universe,boolean expandingUniverse) {
+		return CollectionUtils.emptyIfNull(universe).stream().flatMap(p -> {
+			return expandingUniverse ? p.getHistoricalComposition().stream() : p.getComposition().stream();
+		}).distinct();
 	}
-
-	public Set<IPortfolio> portfolioSetFromStringArray(String[] portfolios) {
-		Set<IPortfolio> set = new HashSet<IPortfolio>();
-
-		for(String portfolio : ArrayUtils.nullToEmpty(portfolios)) {
-			if(CoreConfig.services().instrumentFactory().hasInstrument(portfolio)) {
-				IPortfolio iPortfolio = (IPortfolio) CoreConfig.services().instrumentFactory().getInstrument(portfolio);
-				set.add(iPortfolio);
-			}
-		}
-
-		return set;
-	}
-
 
 }

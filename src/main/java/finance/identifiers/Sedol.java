@@ -2,7 +2,7 @@ package finance.identifiers;
 
 import finance.instruments.IInstrument;
 import finance.misc.Exchange;
-import marketdata.services.bloomberg.enumeration.TickerSuffix;
+import marketdata.services.bloomberg.utils.TickerSuffix;
 
 public class Sedol extends Identifier implements IBloombergIdentifier {
 	
@@ -15,10 +15,6 @@ public class Sedol extends Identifier implements IBloombergIdentifier {
 	}
 	
 	public String getTickerWithSuffix() {
-		return null;
-	}
-	
-	public Exchange guessExchange() {
 		return null;
 	}
 

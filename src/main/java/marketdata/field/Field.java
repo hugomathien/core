@@ -2,6 +2,7 @@ package marketdata.field;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.ZonedDateTime;
 import java.util.HashMap;
 import marketdata.services.bloomberg.BBGService;
@@ -65,9 +66,20 @@ public interface Field {
 			return type().cast(val);
 		}
 		else if(type() == LocalDate.class) {
-			Datetime val = value.getValueAsDate();
-			LocalDate ld = BBGService.convertBbgToJavaLocalDate(val);
-			return type().cast(ld);
+			// TODO: dates seem to be returned as long but is it always the case(i.e: there is a getValueAsDate() method ) ?
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+			long dateInt = value.getValueAsInt64();
+			String dateStr = String.valueOf(dateInt);
+			LocalDate val = LocalDate.parse(dateStr,formatter);
+			return val;
+		}
+		else if(type() == java.sql.Date.class) {
+			// TODO: dates seem to be returned as long but is it always the case(i.e: there is a getValueAsDate() method ) ?
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+			long dateInt = value.getValueAsInt64();
+			String dateStr = String.valueOf(dateInt);
+			LocalDate val = LocalDate.parse(dateStr,formatter);
+			return java.sql.Date.valueOf(val);
 		}
 		
 		return value.toString();
@@ -142,6 +154,9 @@ public interface Field {
 		}
 		else if(type() == Instant.class) {
 			return DataTypes.TimestampType;
+		}
+		else if(type() == java.sql.Date.class) {
+			return DataTypes.DateType;
 		}
 		else {
 			return DataTypes.StringType;

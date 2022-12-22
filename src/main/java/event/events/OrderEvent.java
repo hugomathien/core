@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.core.Ordered;
 import org.springframework.stereotype.Component;
 
-import event.sequencing.processing.CoreEventType;
+import event.processing.CoreEventType;
 import finance.order.Order;
 
 @Component

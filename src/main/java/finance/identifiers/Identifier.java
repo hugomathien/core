@@ -1,6 +1,7 @@
 package finance.identifiers;
 
 
+import config.CoreConfig;
 import finance.instruments.IInstrument;
 import finance.misc.Exchange;
 
@@ -49,11 +50,10 @@ public abstract class Identifier implements Comparable<Identifier> {
 		return this.getName().toString();
 	}
 	
-	public abstract Exchange guessExchange();
-	
 	@Override
 	public int compareTo(Identifier identifier) {
 		return this.getName().compareTo(identifier.getName());
 		
 	}
+
 }

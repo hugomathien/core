@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+	    http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+		http://www.springframework.org/schema/context
+		http://www.springframework.org/schema/context/spring-context-4.3.xsd"
+	xmlns:context="http://www.springframework.org/schema/context">
+
+
+	<bean id="datarequest1" class="event.timers.TimerDataRequest" scope="singleton">
+		<property name="dataService" value="BLOOMBERG" />
+		<property name="requestType" value="HistoricalDataRequest" />
+		<property name="instrumentType" value="SingleStock" />
+		<property name="identifierType" value="TICKER" />
+		<property name="identifiers">
+			<list>
+				<value>TTE FP</value>
+				<value>VOD LN</value>
+			</list>
+		</property>
+		<property name="fields">
+			<list>
+				<value>PX_LAST</value>
+				<value>VOLUME</value>
+			</list>
+		</property>
+		<property name="startDate" value="2022-01-01" />
+		<property name="endDate" value="2022-07-01" />
+		<property name="initialWindowLookBack" value="P30D" />
+		<property name="windowLookForward" value="P90D" />
+		<property name="step" value="P90D" />
+	</bean>
+
+</beans>
+	

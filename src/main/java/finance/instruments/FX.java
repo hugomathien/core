@@ -18,7 +18,7 @@ public class FX extends Instrument {
 	
 	public FX(String left,String right) {
 		this.ccyLeft = left;
-		this.ccyRight = right.concat(right);
+		this.ccyRight = right;
 		this.setCurrency(left);
 		this.setInstrumentType(InstrumentType.FX);
 	}

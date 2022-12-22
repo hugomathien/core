@@ -14,26 +14,26 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import marketdata.services.bloomberg.utils.RequestOverrides;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import config.CoreConfig;
-import event.sequencing.Sequenceable;
+import event.timers.Sequenceable;
 import exceptions.DataQueryException;
 import exceptions.DataServiceStartException;
-import finance.identifiers.Identifier;
 import finance.identifiers.Identifier;
 import finance.identifiers.IdentifierType;
 import finance.instruments.IInstrument;
 import finance.instruments.IPortfolio;
 import finance.instruments.InstrumentType;
 import marketdata.field.Field;
-import marketdata.services.bloomberg.enumeration.RequestOverrides;
+
 import static marketdata.services.base.RequestParameters.*;
 
-public class DataRequest<K> implements Sequenceable {
+public class DataRequest implements Sequenceable {
 
 	private DataServiceEnum dataService;
 	private RequestType requestType;
@@ -50,6 +50,7 @@ public class DataRequest<K> implements Sequenceable {
 	private boolean completed;
 	private boolean backfill = false;
 	private boolean subscribe = false;
+	private boolean expandingUniverse = false; // Whether to work with all historical members for the universe in the query
 
 	public DataRequest() {
 		this.universe = new HashSet<>();
@@ -59,7 +60,7 @@ public class DataRequest<K> implements Sequenceable {
 		this.overrides =  new HashMap<RequestOverrides,Object>();
 	}
 
-	public DataRequest(Builder<K> builder) {
+	public DataRequest(Builder builder) {
 		this.dataService = builder.dataService;
 		this.requestType = builder.requestType;
 		this.identifierType = builder.identifierType;
@@ -72,6 +73,7 @@ public class DataRequest<K> implements Sequenceable {
 		this.completed = false;
 		this.subscribe = builder.subscribe;
 		this.universe = builder.universe;
+		this.expandingUniverse = builder.expandingUniverse;
 	}
 
 	public DataServiceEnum getDataService() {
@@ -186,9 +188,25 @@ public class DataRequest<K> implements Sequenceable {
 		this.subscribe = subscribe;
 	}
 
+	public HashSet<IPortfolio> getUniverse() {
+		return universe;
+	}
+
+	public void setUniverse(HashSet<IPortfolio> universe) {
+		this.universe = universe;
+	}
+
+	public boolean isExpandingUniverse() {
+		return expandingUniverse;
+	}
+
+	public void setExpandingUniverse(boolean expandingUniverse) {
+		this.expandingUniverse = expandingUniverse;
+	}
 
 	public void incrementCompletionCount() {
 		this.instrumentsCompletionCount += 1;
+		CoreConfig.logger.log(org.apache.logging.log4j.Level.INFO,"Data Request made progress:"+this.instrumentsCompletionCount+" completed out of "+this.identifiers.size());
 	}
 
 	public Set<Identifier> getIdentifiers() {
@@ -200,11 +218,13 @@ public class DataRequest<K> implements Sequenceable {
 				CoreConfig
 				.services()
 				.instrumentFactory()
-				.identifiersForPortfolioUniverseAndInstrumentType(universe,instrumentType,identifierType)
-				.collect(Collectors.toSet());		
+				.instrumentsForPortfolioUniverse(universe,this.expandingUniverse) // TODO: default to current portfolio, not historical
+				.filter(i -> i.getInstrumentType().equals(instrumentType))
+				.map(i -> i.getIdentifier(identifierType))
+				.collect(Collectors.toSet());
+
 		this.identifiers.addAll(universeIdentifiers);
 		
-		// TODO: if there is no universe and no identifiers should we query the entire platform universe ?
 		return this.identifiers;
 	}
 
@@ -215,50 +235,48 @@ public class DataRequest<K> implements Sequenceable {
 				.toArray(String[]::new);
 	}
 
-	public K query() throws DataQueryException,DataServiceStartException {
-		return this.query(this.dataService,this.requestType);
+	public void query() throws DataQueryException,DataServiceStartException {
+		this.query(this.dataService,this.requestType);
 	}
 
 	public void subscribe() throws DataQueryException, DataServiceStartException {
 		this.subscribe(this.dataService);
 	}
 
-	public K query(DataServiceEnum serviceName, RequestType requestType) throws DataQueryException,DataServiceStartException {
+	private void query(DataServiceEnum serviceName, RequestType requestType) throws DataQueryException,DataServiceStartException {
 		initIdentifiers();
 		if(this.subscribe) {
 			subscribe(serviceName);
-			return null;
 		}
 
-		IReferenceDataService<K> service = (IReferenceDataService<K>) CoreConfig.ctx.getBean(serviceName.getReference());
+		AbstractDataService service = (AbstractDataService) CoreConfig.ctx.getBean(serviceName.getReference());
 		if(!service.requestIsValid(requestType)) {
 			Logger.getRootLogger().log(Level.WARN, serviceName + " service does not accept request " + requestType.name());
-			return null;
 		}
 
 		if(!service.isOpened())
 			service.start();
-		K result = service.query(this, requestType);
+		System.gc();
+		service.query(this);
 		if(serviceName.isAsynchronous())
-			return queryAsync(requestType); // !!! This blocks the query until completed TODO: Make that optional ?
-		else
-			return result;
+			queryAsync(requestType); // ! TODO:  blocks the query until completion ?
+
 	}
 
-	private K queryAsync(RequestType requestType) throws DataServiceStartException, DataQueryException {
-		Logger.getRootLogger().log(Level.INFO, "Waiting for Data Request to complete...");
+	private void queryAsync(RequestType requestType) throws DataServiceStartException, DataQueryException {
+		CoreConfig.logger.log(org.apache.logging.log4j.Level.INFO, "Sending DataRequest .....");
 		synchronized(this) {
 			while(!this.isCompleted()) {
 				try {
-					this.wait(100000); // TODO MOVE TIMEOUT IN CONFIG
+					this.wait(); // TODO: Can hang forever
 				}
 				catch(InterruptedException e) {
 					throw new DataServiceStartException("Error starting asynchronous query", e);
 				}
 			}
 		}
-		Logger.getRootLogger().log(Level.INFO, "Asynchronous Data Request has completed");
-		return null;
+		// TODO: check the request completion rate, log and resend the request if not completed
+		CoreConfig.logger.log(org.apache.logging.log4j.Level.INFO, "DataRequest has completed .....");
 	}
 
 	public void subscribe(DataServiceEnum serviceName) throws DataQueryException, DataServiceStartException {
@@ -278,7 +296,17 @@ public class DataRequest<K> implements Sequenceable {
 		}
 	}
 
-	public static class Builder<K> {
+	public String toString() {
+		return new StringBuilder()
+				.append("DataService="+this.getDataService().toString())
+				.append("RequestType="+this.getRequestType().toString())
+				.append("IdentifiersCount="+this.getIdentifiers().size())
+				.append("Fields="+this.getFields().toString())
+				.append("Parameters="+this.getParameters().toString())
+				.append("Overrides="+this.getOverrides().toString()).toString();
+	}
+
+	public static class Builder {
 		private DataServiceEnum dataService;
 		private RequestType requestType;
 		private IdentifierType identifierType = CoreConfig.PRIMARY_IDENTIFIER_TYPE;
@@ -288,9 +316,9 @@ public class DataRequest<K> implements Sequenceable {
 		private ArrayList<Field> fields;
 		private Map<RequestParameters,Object> parameters;
 		private Map<RequestOverrides,Object> overrides;
-		private boolean backfill = true;
+		private boolean backfill = false;
 		private boolean subscribe = false;
-
+		private boolean expandingUniverse = false;
 		public Builder() {
 			universe = new HashSet<IPortfolio>();
 			parameters = new HashMap<RequestParameters,Object>();
@@ -300,7 +328,7 @@ public class DataRequest<K> implements Sequenceable {
 			universe = new HashSet<IPortfolio>();
 		}
 
-		public Builder<K> universe(String... portfolios) {
+		public Builder universe(String... portfolios) {
 			if (portfolios == null)
 				return this;
 			for(String portfolio : portfolios) {
@@ -312,18 +340,28 @@ public class DataRequest<K> implements Sequenceable {
 			return this;
 		}
 
-		public Builder<K> identifiers(Identifier... identifiers) {
+
+		public Builder identifiers(Identifier... identifiers) {
 			List<Identifier> identifiersList = Arrays.asList(ArrayUtils.nullToEmpty(identifiers,Identifier[].class)) ;			
 			this.identifiers.addAll(identifiersList);
 			return this;
 		}
 
-		public Builder<K> identifiers(Collection<? extends Identifier> identifiers) {
+		public Builder identifiers(Collection<? extends Identifier> identifiers) {
 			this.identifiers.addAll(CollectionUtils.emptyIfNull(identifiers));
 			return this;
 		}
 
-		public Builder<K> identifiers(IInstrument... instruments) {
+		public Builder identifiers(String... instruments) {
+			List<IInstrument> instrumentList =Arrays.stream(instruments)
+					.map(x -> CoreConfig.services().getOrMakeInstrument(this.instrumentType,this.identifierType,x))
+					.collect(Collectors.toList());
+
+			this.identifiers(instrumentList);
+			return this;
+		}
+
+		public Builder identifiers(IInstrument... instruments) {
 			List<IInstrument> instrumentList = Arrays.asList(ArrayUtils.nullToEmpty(instruments,IInstrument[].class)) ;			
 			List<Identifier> identifiersList = instrumentList.stream().flatMap(
 					x -> x.getIdentifiers().stream().filter(i -> i.getType().equals(identifierType))).collect(Collectors.toList());
@@ -332,31 +370,31 @@ public class DataRequest<K> implements Sequenceable {
 		}
 
 		
-		public Builder<K> identifiers(Set<? extends IInstrument> instruments) {
+		public Builder identifiers(Set<? extends IInstrument> instruments) {
 			List<Identifier> identifiersList = CollectionUtils.emptyIfNull(instruments).stream().flatMap(
 					x -> x.getIdentifiers().stream().filter(i -> i.getType().equals(identifierType))).collect(Collectors.toList());
 			this.identifiers.addAll(identifiersList);
 			return this;
 		}
 
-		public Builder<K> identifiers(List<? extends IInstrument> instruments) {
+		public Builder identifiers(List<? extends IInstrument> instruments) {
 			List<Identifier> identifiersList = CollectionUtils.emptyIfNull(instruments).stream().flatMap(
 					x -> x.getIdentifiers().stream().filter(i -> i.getType().equals(identifierType))).collect(Collectors.toList());
 			this.identifiers.addAll(identifiersList);
 			return this;
 		}
 
-		public Builder<K> identifiers(InstrumentType instrumentType, String... instrumentsNames) {
+		public Builder identifiers(InstrumentType instrumentType, String... instrumentsNames) {
 			identifiers(this.identifierType,instrumentType,instrumentsNames);
 			return this;
 		}
 
-		public Builder<K> identifiers(InstrumentType instrumentType, Collection<String> instrumentsNames) {
+		public Builder identifiers(InstrumentType instrumentType, Collection<String> instrumentsNames) {
 			identifiers(this.identifierType,instrumentType,instrumentsNames);
 			return this;
 		}
 
-		public Builder<K> identifiers(IdentifierType identifierType, IInstrument[] instrumentsNames) {
+		public Builder identifiers(IdentifierType identifierType, IInstrument[] instrumentsNames) {
 			List<IInstrument> instruments = Arrays.asList(ArrayUtils.nullToEmpty(instrumentsNames,IInstrument[].class)) ;			
 			List<Identifier> identifiersList = instruments.stream().flatMap(
 					x -> x.getIdentifiers().stream().filter(i -> i.getType().equals(identifierType))).collect(Collectors.toList());
@@ -364,7 +402,7 @@ public class DataRequest<K> implements Sequenceable {
 			return this;
 		}
 
-		public Builder<K> identifiers(IdentifierType identifierType, InstrumentType instrumentType,String... instruments) {
+		public Builder identifiers(IdentifierType identifierType, InstrumentType instrumentType,String... instruments) {
 			instruments = ArrayUtils.nullToEmpty(instruments);
 			Set<IInstrument> instrumentSet = CoreConfig.services().instrumentFactory()
 					.makeMultipleInstrument(instrumentType, identifierType, instruments);
@@ -375,7 +413,7 @@ public class DataRequest<K> implements Sequenceable {
 			return this;
 		}
 
-		public Builder<K> identifiers(IdentifierType identifierType, InstrumentType instrumentType,Collection<String> instrumentsNames) {
+		public Builder identifiers(IdentifierType identifierType, InstrumentType instrumentType,Collection<String> instrumentsNames) {
 			Set<IInstrument> instruments = CoreConfig.services().instrumentFactory()
 					.makeMultipleInstrument(instrumentType, identifierType, CollectionUtils.emptyIfNull(instrumentsNames));
 			List<Identifier> identifiersList = instruments.stream().flatMap(
@@ -385,80 +423,86 @@ public class DataRequest<K> implements Sequenceable {
 			return this;
 		}
 
-		public Builder<K> fields(Field... fields) {
+		public Builder fields(Field... fields) {
 			List<Field> fieldList = Arrays.asList(ArrayUtils.nullToEmpty(fields,Field[].class));
 			this.fields.addAll(fieldList);
 			return this;
 		}
 
-		public Builder<K> fields(String... fields) {
+		public Builder fields(String... fields) {
 			List<String> fieldStringList = Arrays.asList(ArrayUtils.nullToEmpty(fields)) ;			
 			List<Field> fieldList = fieldStringList.stream().map(x -> Field.get(x)).collect(Collectors.toList());
 			this.fields.addAll(fieldList);
 			return this;
 		}
 
-		public Builder<K> fields(Collection<? extends Field> fields) {
+		public Builder fields(Collection<? extends Field> fields) {
 			this.fields.addAll(CollectionUtils.emptyIfNull(fields));
 			return this;
 		}
 
-		public Builder<K> parameters(Map<RequestParameters,Object> parameters) {
+		public Builder parameters(Map<RequestParameters,Object> parameters) {
 			this.parameters.putAll(parameters);
 			return this;
 		}
 
-		public Builder<K> parameters(RequestParameters key,Object value) {
+		public Builder parameters(RequestParameters key,Object value) {
 			this.parameters.put(key,value);
 			return this;
 		}
 
-		public Builder<K> parameters(String key,Object value) {
+		public Builder parameters(String key,Object value) {
 			this.parameters.put(RequestParameters.valueOf(key),value);
 			return this;
 		}
 
-		public Builder<K> override(Map<RequestOverrides,Object> overrides) {
+		public Builder override(Map<RequestOverrides,Object> overrides) {
 			this.overrides.putAll(overrides);
 			return this;
 		}
 
-		public Builder<K> override(RequestOverrides key, Object value) {
+		public Builder override(RequestOverrides key, Object value) {
 			this.overrides.put(key,value);
 			return this;
 		}
 
-		public Builder<K> identifierType(IdentifierType idType) {
+		public Builder identifierType(IdentifierType idType) {
 			this.identifierType = idType;
 			return this;
 		}
 
-		public Builder<K> instrumentType(InstrumentType instrumentType) {
+		public Builder instrumentType(InstrumentType instrumentType) {
 			this.instrumentType = instrumentType;
 			return this;
 		}
 
-		public Builder<K> backfill(boolean backfill) {
+		public Builder backfill(boolean backfill) {
 			this.backfill = backfill;
 			return this;
 		}
 
-		public Builder<K> subscribe(boolean subscribe) {
+		public Builder subscribe(boolean subscribe) {
 			this.subscribe = subscribe;
 			return this;
 		}
 
-		public Builder<K> dataService(DataServiceEnum dataService) {
+		public Builder expandingUniverse(boolean expandingUniverse) {
+			this.expandingUniverse = expandingUniverse;
+			return this;
+		}
+
+
+		public Builder dataService(DataServiceEnum dataService) {
 			this.dataService = dataService;
 			return this;
 		}
 
-		public Builder<K> requestType(RequestType requestType) {
+		public Builder requestType(RequestType requestType) {
 			this.requestType = requestType;
 			return this;
 		}
 
-		public Builder<K> intradaySessionLondon(LocalDate localDate) {
+		public Builder intradaySessionLondon(LocalDate localDate) {
 			ZonedDateTime sodLocal = localDate.atStartOfDay(ZoneId.of("Europe/London"));
 			ZonedDateTime tradingStart;
 			tradingStart = sodLocal
@@ -475,8 +519,8 @@ public class DataRequest<K> implements Sequenceable {
 			return this;
 		}
 
-		public DataRequest<K> build() {
-			return new DataRequest<K>(this);
+		public DataRequest build() {
+			return new DataRequest(this);
 		}
 	}
 

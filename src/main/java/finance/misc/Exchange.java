@@ -9,6 +9,8 @@ import event.events.TradingSessionEvent;
 import exceptions.TradingSessionMissingException;
 
 public class Exchange {
+	private String exchangeCode;
+	private String compositeExchangeCode;
 	private String mic;
 	private Map<TradingPhaseEnum,TradingSession> tradingSessions;
 	private ZoneId dateTimeZone;
@@ -72,7 +74,26 @@ public class Exchange {
 	public void setCountryIso(String countryIso) {
 		this.countryIso = countryIso;
 	}
-	
+
+	public String getExchangeCode() {
+		return exchangeCode;
+	}
+
+	public void setExchangeCode(String exchangeCode) {
+		this.exchangeCode = exchangeCode;
+	}
+
+	public String getCompositeExchangeCode() {
+		if(this.compositeExchangeCode != null) // TODO: throw error instead
+			return compositeExchangeCode;
+		else
+			return this.exchangeCode;
+	}
+
+	public void setCompositeExchangeCode(String compositeExchangeCode) {
+		this.compositeExchangeCode = compositeExchangeCode;
+	}
+
 	public static Exchange getExchangeFromMic(String mic) {
 		return CoreConfig.services().getExchange(mic);
 	}

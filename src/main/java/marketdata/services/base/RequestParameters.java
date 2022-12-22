@@ -29,7 +29,13 @@ public enum RequestParameters {
 	includeRpsCode,
 	includeBicMicCodes,
 	minVolumePct,
-	randomizedNumberScales;
+	randomizedNumberScales,
+	filepath,
+	fileformat,
+	sql,
+	selectExpr,
+	header,
+	useComposite;
 	
 	private RequestParameters() {
 		

@@ -7,6 +7,7 @@ import java.util.function.Consumer;
 
 import javax.annotation.PostConstruct;
 
+import marketdata.services.base.RequestType;
 import org.apache.commons.math3.util.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -24,8 +25,7 @@ import finance.identifiers.Identifier;
 import marketdata.field.Field;
 import marketdata.services.base.DataRequest;
 import marketdata.services.base.IRealTimeDataService;
-import marketdata.services.bloomberg.enumeration.ServiceType;
-import marketdata.services.bloomberg.responsehandler.BBGRealTimeResponseHandler;
+import marketdata.services.bloomberg.utils.ServiceType;
 
 @Service("BLOOMBERG_REALTIME")
 @Scope("singleton")
@@ -43,11 +43,15 @@ public class BBGRealTimeDataService extends BBGService implements IRealTimeDataS
 		this.setSession(session);
 	}
 
+	public void setRequestDiscovery(RequestType[] requestDiscovery) {
+		this.requestDiscovery = requestDiscovery;
+	}
+
 	public BBGRealTimeDataService() {
 		super(ServiceType.LIVE_DATA);
 	}
 
-	public void query(DataRequest<?> requestBuilder) throws DataQueryException {
+	public void query(DataRequest requestBuilder) throws DataQueryException {
 		SubscriptionList subscriptions = new SubscriptionList();
 
 		String fieldChain = requestBuilder
@@ -88,6 +92,6 @@ public class BBGRealTimeDataService extends BBGService implements IRealTimeDataS
 	public BBGRealTimeResponseHandler getResponseHandler() {
 		return responseHandler;
 	}
-	
-	
+
+
 }

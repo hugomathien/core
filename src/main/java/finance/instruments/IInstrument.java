@@ -49,4 +49,6 @@ public interface IInstrument extends Comparable<IInstrument> {
 	public default int compareTo(IInstrument otherInstrument) {
 	    return this.getPrimaryIdentifier().getName().compareTo(otherInstrument.getPrimaryIdentifier().getName());
 	}
+
+	public String toString();
 }

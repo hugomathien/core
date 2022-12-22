@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import event.sequencing.processing.CoreEventType;
+import event.processing.CoreEventType;
 import finance.instruments.IInstrument;
 import marketdata.container.Spot;
 import marketdata.field.Field;

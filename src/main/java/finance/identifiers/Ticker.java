@@ -11,32 +11,10 @@ import finance.instruments.IInstrument;
 import finance.instruments.Index;
 import finance.instruments.SingleStock;
 import finance.misc.Exchange;
-import marketdata.services.bloomberg.enumeration.TickerSuffix;
+import marketdata.services.bloomberg.utils.TickerSuffix;
 
 public class Ticker extends Identifier implements IBloombergIdentifier{
 	private static Map<String,String> tickerMicMap = new HashMap<String,String>();
-	
-	// TODO: Externalize in configuration files
-	static {
-		tickerMicMap.put("FP", "XPAR");
-		tickerMicMap.put("SM", "XMAD");
-		tickerMicMap.put("SQ", "XMAD");
-		tickerMicMap.put("LN", "XLON");
-		tickerMicMap.put("GY", "XETR");
-		tickerMicMap.put("GR", "XETR");
-		tickerMicMap.put("NA", "XAMS");
-		tickerMicMap.put("VX", "XSWX");
-		tickerMicMap.put("SW", "XSWX");
-		tickerMicMap.put("IM", "XMIL");
-		tickerMicMap.put("BB", "XBRU");
-		tickerMicMap.put("DC", "XCSE");
-		tickerMicMap.put("FH", "XHEL");
-		tickerMicMap.put("LS", "XLUS");
-		tickerMicMap.put("NO", "XOSL");
-		tickerMicMap.put("SS", "XSTO");
-		tickerMicMap.put("AV", "XWBO");
-		tickerMicMap.put("ID", "XDUB");
-	}
 	
 	public Ticker(IInstrument instrument,String name) {
 		super(instrument,name,IdentifierType.TICKER);
@@ -69,17 +47,6 @@ public class Ticker extends Identifier implements IBloombergIdentifier{
 	public String getBbgQuerySyntax() {
 		String tickerWithSuffix = this.getTickerWithSuffix();
 		return "/ticker/" + tickerWithSuffix;
-	}
-	
-	@Override
-	public Exchange guessExchange() {
-		String substring = this.getName().substring(Math.max(this.getName().length() - 2, 0));
-		
-		if(!tickerMicMap.containsKey(substring))
-			return null;
-		
-		String mic = tickerMicMap.get(substring);
-		return CoreConfig.services().getExchange(mic);
 	}
 	
 	public static String getPrimaryTicker(String ticker) {

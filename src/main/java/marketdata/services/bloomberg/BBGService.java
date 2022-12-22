@@ -25,8 +25,8 @@ import finance.instruments.IInstrument;
 import finance.instruments.InstrumentFactory;
 import marketdata.services.base.AbstractDataService;
 import marketdata.services.base.DataServiceEnum;
-import marketdata.services.bloomberg.enumeration.ServiceType;
-import marketdata.services.bloomberg.enumeration.TickerSuffix;
+import marketdata.services.bloomberg.utils.ServiceType;
+import marketdata.services.bloomberg.utils.TickerSuffix;
 
 public abstract class BBGService extends AbstractDataService {
 
@@ -52,6 +52,11 @@ public abstract class BBGService extends AbstractDataService {
 		this.sessionOptions = new SessionOptions();
 		this.sessionOptions.setServerHost(serverHost);
 		this.sessionOptions.setServerPort(serverPort);
+		this.sessionOptions.setMaxSendCacheSize(1342177280);
+		this.sessionOptions.setMaxEventQueueSize(100000);
+		this.sessionOptions.setMaxPendingRequests(10240);
+		this.sessionOptions.setDefaultKeepAliveInactivityTime(100000);
+		this.sessionOptions.setDefaultKeepAliveResponseTimeout(100000);
 	}
 	
 	public synchronized boolean isOpened() {
@@ -198,4 +203,5 @@ public abstract class BBGService extends AbstractDataService {
 		instrument = id.getInstrument();
 		return instrument;
 	}
+
 }

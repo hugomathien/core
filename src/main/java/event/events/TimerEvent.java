@@ -4,9 +4,9 @@ import java.time.Instant;
 
 import org.springframework.core.Ordered;
 
-import event.sequencing.processing.EventType;
-import event.sequencing.AbstractEventSequencer;
-import event.sequencing.Sequenceable;
+import event.processing.EventType;
+import event.timers.AbstractEventSequencer;
+import event.timers.Sequenceable;
 
 public class TimerEvent extends Event {
 
@@ -41,6 +41,13 @@ public class TimerEvent extends Event {
 
 	public void setSequenceable(Sequenceable sequenceable) {
 		this.sequenceable = sequenceable;
+	}
+
+	public String toString() {
+		return new StringBuilder()
+				.append(super.toString())
+				.append(this.eventSequencer.toString())
+				.toString();
 	}
 
 }

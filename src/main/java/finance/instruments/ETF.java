@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.TreeSet;
 
 import config.CoreConfig;
+import event.events.PortfolioCompositionEvent;
 import finance.identifiers.IdentifierType;
 
 public class ETF extends Instrument implements IPortfolio {
@@ -73,5 +74,18 @@ public class ETF extends Instrument implements IPortfolio {
 	public void setLastCompositionUpdate(Instant lastCompositionUpdate) {
 		this.setLastCompositionUpdate(lastCompositionUpdate);
 	}
-	
+
+	public TreeSet<IInstrument> getHistoricalComposition() {
+		return this.portfolio.getHistoricalComposition();
+	}
+
+	public void setHistoricalComposition(TreeSet<IInstrument> historicalComposition) {
+		this.portfolio.setHistoricalComposition(historicalComposition);
+	}
+
+	@Override
+	public void updateComposition(PortfolioCompositionEvent event) {
+		this.portfolio.updateComposition(event);
+	}
+
 }

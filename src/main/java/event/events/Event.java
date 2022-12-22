@@ -1,10 +1,11 @@
 package event.events;
 
 import java.time.Instant;
+import java.util.StringJoiner;
 
 import org.springframework.context.ApplicationEvent;
 
-import event.sequencing.processing.EventType;
+import event.processing.EventType;
 
 public abstract class Event extends ApplicationEvent {
 	
@@ -41,6 +42,11 @@ public abstract class Event extends ApplicationEvent {
 	public void setPriority(int priority) {
 		this.priority = priority;
 	}
-	
+
+	public String toString() {
+		return new StringBuilder()
+				.append("Timestamp="+this.eventTimestamp.toString())
+				.append("EventType="+this.eventType.toString()).toString();
+	}
 
 }

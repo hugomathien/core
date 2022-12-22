@@ -3,12 +3,14 @@ package event.events;
 import java.time.Instant;
 import java.time.temporal.Temporal;
 
+import config.CoreConfig;
+import org.apache.logging.log4j.Level;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
-import event.sequencing.processing.EventPriorityQueue;
+import event.processing.EventPriorityQueue;
 import finance.instruments.IInstrument;
 import marketdata.container.MarketDataContainerEnum;
 import marketdata.field.Field;
@@ -33,12 +35,12 @@ public class MarketDataEventFactory {
 		IInstrument instrument,
 		Field field,
 		Object value) {
-			
+
 		if(!isBackfill) {
 				queue.add(new MarketDataEventSpot(eventTimestamp,dataService,marketDataEnd,marketDataEnd,instrument,field,value));
 				return;
 		}
-		
+
 		switch(dataContainerType) {
 			case BAR:
 				queue.add(new MarketDataEventBar(eventTimestamp, dataService, marketDataStart,marketDataEnd,instrument,field,value));

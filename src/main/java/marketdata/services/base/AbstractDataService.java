@@ -2,6 +2,7 @@ package marketdata.services.base;
 
 import javax.annotation.PostConstruct;
 
+import exceptions.DataQueryException;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -33,11 +34,7 @@ public abstract class AbstractDataService implements IDataService {
 	public RequestType[] getRequestDiscovery() {
 		return requestDiscovery;
 	}
-	
-	public void setRequestDiscovery(RequestType[] requestDIscovery) {
-		this.requestDiscovery = requestDiscovery;
-	}
-	
+
 	public DataServiceEnum getServiceName() {
 		return serviceName;
 	}
@@ -49,4 +46,6 @@ public abstract class AbstractDataService implements IDataService {
 	public void logDataResponseException(Field field, IInstrument instrument) {
 		Logger.getRootLogger().log(Level.WARN, this.getServiceName().name() + " could not process " + field.name() + " for " + instrument.getPrimaryIdentifier().toString());;
 	}
+
+	public abstract void query(DataRequest requestBuilder)  throws DataQueryException;
 }
