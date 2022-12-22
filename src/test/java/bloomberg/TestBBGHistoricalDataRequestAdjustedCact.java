@@ -32,11 +32,11 @@ import org.springframework.test.context.junit4.SpringRunner;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestBBGHistoricalDataRequestAdjustedCact {
 
-	private DataRequest<?> request;
+	private DataRequest request;
 
 	@Before
 	public void setup() throws DataQueryException, DataServiceStartException {
-		request = new DataRequest.Builder<>()
+		request = new DataRequest.Builder()
 				.dataService(DataServiceEnum.BLOOMBERG)
 				.backfill(true)
 				.fields("PX_LAST","VOLUME")

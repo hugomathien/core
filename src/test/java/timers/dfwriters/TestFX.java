@@ -30,7 +30,7 @@ public class TestFX {
 	private AbstractEventSequencer<StateToDataframe> sequencer;
 	private DataRequest dataRequest;
 	private TimerDataframeWriterStream writerStream;
-	private String[] fx = {"EURUSD","GBPUSD","NOKUSD","SEKUSD","CHFUSD","DKKUSD"};
+	private String[] fx = {"EURUSD","GBPUSD","NOKUSD","SEKUSD","CHFUSD","DKKUSD","ISKUSD","ILSUSD","PLNUSD","CZKUSD","HUFUSD","RUBUSD","AUDUSD","CADUSD","JPYUSD"};
 	@Before
 	public void setup() throws DataQueryException, DataServiceStartException {
 
@@ -67,9 +67,9 @@ public class TestFX {
 		writerStream = (TimerDataframeWriterStream) new TimerDataframeWriterStream.Builder()
 				.async(true)
 				.processingTime("10 seconds")
-				.checkpointLocation("C:\\Users\\admin\\Documents\\workspace\\datalake\\checkpoint")
+				.checkpointLocation("C:\\Users\\admin\\Documents\\workspace\\data\\checkpoint")
 				.dfContainer(capture.getDfContainer())
-				.path("C:\\Users\\admin\\Documents\\workspace\\datalake\\parquet\\fx")
+				.path("C:\\Users\\admin\\Documents\\workspace\\data\\parquet\\fx")
 				.queryName("query")
 				.format("parquet")
 				.outputMode("append")

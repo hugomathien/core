@@ -34,11 +34,11 @@ import org.springframework.test.context.junit4.SpringRunner;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestBBGIntradayBarDataRequest {
 
-	private DataRequest<Object> request;
+	private DataRequest request;
 
 	@Before
 	public void setUp() throws DataServiceStartException, DataQueryException {
-		request = new DataRequest.Builder<>()
+		request = new DataRequest.Builder()
 		.dataService(DataServiceEnum.BLOOMBERG)
 		.backfill(false)
 		.fields(Field.get("TRADE"))

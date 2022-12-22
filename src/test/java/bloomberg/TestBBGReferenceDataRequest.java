@@ -6,8 +6,6 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import config.CoreConfig;
 import exceptions.DataQueryException;
@@ -18,7 +16,7 @@ import marketdata.field.Field;
 import marketdata.services.base.DataRequest;
 import marketdata.services.base.DataServiceEnum;
 import marketdata.services.base.RequestType;
-import marketdata.services.bloomberg.enumeration.RequestOverrides;
+import marketdata.services.bloomberg.utils.RequestOverrides;
 import org.junit.runners.MethodSorters;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -27,11 +25,11 @@ import org.springframework.test.context.junit4.SpringRunner;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestBBGReferenceDataRequest {
 
-	private DataRequest<Object> request;
+	private DataRequest request;
 
 	@Test
 	public void a() throws DataServiceStartException, DataQueryException {
-		request = new DataRequest.Builder<>()
+		request = new DataRequest.Builder()
 		.dataService(DataServiceEnum.BLOOMBERG)
 		.backfill(false)
 		.fields("PX_LAST","VOLUME","FIELD_EXCEPTION_ERROR")
@@ -46,7 +44,7 @@ public class TestBBGReferenceDataRequest {
 	
 	@Test
 	public void b() throws DataServiceStartException, DataQueryException {
-		request = new DataRequest.Builder<>()
+		request = new DataRequest.Builder()
 		.dataService(DataServiceEnum.BLOOMBERG)
 		.backfill(false)
 		.fields("INDX_MWEIGHT_HIST")
@@ -62,7 +60,7 @@ public class TestBBGReferenceDataRequest {
 	
 	@Test
 	public void c() throws DataServiceStartException, DataQueryException {
-		request = new DataRequest.Builder<>()
+		request = new DataRequest.Builder()
 		.dataService(DataServiceEnum.BLOOMBERG)
 		.backfill(false)
 		.fields("PX_LAST")

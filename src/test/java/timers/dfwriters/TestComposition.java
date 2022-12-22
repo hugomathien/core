@@ -2,16 +2,10 @@ package timers.dfwriters;
 
 import config.CoreConfig;
 import dataset.StateToDataframe;
-import event.timers.TimerDataframeWriterStream;
-import event.timers.AbstractEventSequencer;
-import event.timers.TimerDataRequest;
-import event.timers.TimerStateToDataframe;
+import event.timers.*;
 import finance.identifiers.IdentifierType;
 import finance.instruments.InstrumentType;
-import marketdata.services.base.DataRequest;
-import marketdata.services.base.DataServiceEnum;
-import marketdata.services.base.RequestParameters;
-import marketdata.services.base.RequestType;
+import marketdata.services.base.*;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -30,10 +24,12 @@ public class TestComposition {
 
 	private AbstractEventSequencer<StateToDataframe> sequencer;
 	private AbstractEventSequencer<DataRequest> request;
-	private TimerDataframeWriterStream writerStream;
-	private String index = "RAY";
-	private String region = "amrs";
+	private TimerDataframeWriterBatch writerBatch;
+	private String index = "SXXP";
+	private String region = "emea";
 	private String format="parquet";
+	private String exportFileName = "composition";
+	private boolean replaceWithComposite = false;
 	@Before
 	public void testDataRequestSequencer() throws TimeoutException  {
 		request = new TimerDataRequest.Builder()
@@ -53,11 +49,12 @@ public class TestComposition {
 	public void testInstrumentStateCaptureSequencer() throws TimeoutException, InterruptedException {
 
 		StateToDataframe capture = new dataset.StateToDataframe.Builder()
-		.dfContainerType(dataset.StateToDataframe.DFContainerType.MEMORY_STREAM)
+		.dfContainerType(StateToDataframe.DFContainerType.BATCH)
 		.instrumentType(InstrumentType.SingleStock)
 		.identifierTypes(IdentifierType.TICKER)
 		.universe(index)
 		.expandingUniverse(false)
+		.replaceIdentifiersWithComposite(replaceWithComposite)
 		.build();
 
 		new TimerStateToDataframe.Builder()
@@ -65,21 +62,20 @@ public class TestComposition {
 		.step(Duration.ofDays(1))
 		.build();
 
-		writerStream = (TimerDataframeWriterStream) new TimerDataframeWriterStream.Builder()
-		.processingTime("60 seconds")
-		.checkpointLocation("C:\\Users\\admin\\Documents\\workspace\\datalake\\checkpoint")
-		.dfContainer(capture.getDfContainer())
-		.path("C:\\Users\\admin\\Documents\\workspace\\datalake\\"+format+"\\equity\\"+region+"\\"+index.toLowerCase()+"\\composition")
-		.format("parquet")
-		.outputMode("append")
-		.queryName("myQuery")
-		.partitionColumns(new String[]{"year"})
-		.step(Duration.ofDays(365))
-		.build();
+		writerBatch = (TimerDataframeWriterBatch) new TimerDataframeWriterBatch.Builder()
+				.dfContainer(capture.getDfContainer())
+				.path("C:\\Users\\admin\\Documents\\workspace\\data\\"+format+"\\equity\\"+region+"\\"+index.toLowerCase()+"\\"+exportFileName)
+				.format(format)
+				.outputMode("append")
+				.partitionColumns(new String[]{"year"})
+				.startDate(CoreConfig.GLOBAL_START_DATE)
+				.endDate(CoreConfig.GLOBAL_END_DATE)
+				.step(Duration.ofDays(365))
+				.runOnceOnTermination(true)
+				.build();
 
 		CoreConfig.services().run();
-		writerStream.getQuery().processAllAvailable();
-		writerStream.getQuery().stop();
+
 	}
 
 	

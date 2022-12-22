@@ -1,32 +1,47 @@
-package randomgen;
-
-import static org.junit.Assert.assertTrue;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+package finance;
 
 import config.CoreConfig;
 import exceptions.DataServiceStartException;
-import marketdata.services.bloomberg.BBGReferenceDataService;
+import finance.identifiers.IdentifierType;
+import finance.identifiers.Ticker;
+import finance.instruments.IInstrument;
+import finance.instruments.Instrument;
+import finance.instruments.InstrumentType;
+import finance.misc.Exchange;
 import marketdata.services.randomgen.RandomGeneratorReferenceDataService;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = CoreConfig.class)
-public class TestRandomGenService {
+import java.util.Map;
 
+import static org.junit.Assert.assertTrue;
 
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = CoreConfig.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+public class TestExchange {
     @Autowired
-    private RandomGeneratorReferenceDataService randomGenService;
- 
+    private CoreConfig config;
+    @Autowired(required = false)
+    public Map<String,Exchange> exchangeCodeMap;
  
     @Test
-    public void testSampleService() throws DataServiceStartException {
-    	randomGenService.start();
-       assertTrue(randomGenService.isOpened());
+    public void testExchange() throws DataServiceStartException {
+    	Exchange UW = config.getExchange("UW");
+        Exchange FP = config.getExchange("FP");
     }
- 
-  
+
+    @Test
+    public void replaceWithComposite() throws DataServiceStartException {
+        Instrument stock = config.getOrMakeSingleStock("AAPL VF");
+        String newId = stock.replaceIdentifierWithComposite(IdentifierType.TICKER,"AAPL UW");
+
+    }
 }

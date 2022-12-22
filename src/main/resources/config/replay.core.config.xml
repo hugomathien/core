@@ -11,10 +11,7 @@
 		
 		<context:annotation-config />
 		<context:property-placeholder
-			location="classpath:/config/dataservices.properties,
-					  classpath:/config/instrument.properties,
-					  classpath:/config/clock.properties,
-					  classpath:/config/spark.properties" />
+			location="classpath:/config/spark.properties" />
 		<import resource="classpath:/config/exchange.xml" />
 		<!-- <import resource="classpath/config/replay.core.config.requests.xml" />	 -->
 		

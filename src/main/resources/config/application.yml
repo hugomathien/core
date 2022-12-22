@@ -1,6 +1,24 @@
 logging:
   level:
-    root: DEBUG
+    root: INFO
 config:
   fieldmapper: "classpath:config/fieldmapper.csv"
   core: "classpath:/config/replay.core.config.xml"
+  clock:
+    zoneId: "Europe/London"
+    startDate: "2018-01-01"
+    endDate: "2018-11-20"
+  reference_currency: "USD"
+  instrument:
+    primary_identifier_type: "TICKER"
+    ric: false
+    ticker: true
+    sedol: false
+bloomberg:
+  serverHost: "localhost"
+  serverPort: 8194
+  requestTypes: HistoricalDataRequest,IntradayBarRequest,ReferenceDataRequest,IntradayTickRequest
+randomgen:
+  requestTypes: HistoricalDataRequest,ReferenceDataRequest
+flatfile:
+  requestTypes: IndexCompositionRequest

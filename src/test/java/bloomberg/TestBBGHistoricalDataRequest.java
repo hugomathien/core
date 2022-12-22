@@ -31,17 +31,17 @@ import org.springframework.test.context.junit4.SpringRunner;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestBBGHistoricalDataRequest {
 
-	private DataRequest<?> request;
+	private DataRequest request;
 
 	@Before
 	public void setup() throws DataQueryException, DataServiceStartException {
-		request = new DataRequest.Builder<>()
+		request = new DataRequest.Builder()
 				.dataService(DataServiceEnum.BLOOMBERG)
 				.backfill(false)
 				.fields("VOLUME","FIELD_EXCEPTION_ERROR","PX_LAST")
 				.parameters(RequestParameters.UseDPDF, false)
-				.parameters(RequestParameters.startDate, LocalDate.of(2021,4,5))
-				.parameters(RequestParameters.endDate, LocalDate.of(2021, 4, 9))
+				.parameters(RequestParameters.startDate, LocalDate.of(2006,4,5))
+				.parameters(RequestParameters.endDate, LocalDate.of(2022, 4, 9))
 				.identifierType(IdentifierType.TICKER)
 				.identifiers(InstrumentType.SingleStock, new String[]{"TTE FP","VOD LN"})
 				.requestType(RequestType.HistoricalDataRequest)

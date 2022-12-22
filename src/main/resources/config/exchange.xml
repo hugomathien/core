@@ -28,7 +28,8 @@
 		<property name="tradingPhase" value="CLOSING_AUCTION" />
 	</bean>
 
-	<bean id="XPAR" class="finance.misc.Exchange" scope="singleton">
+	<bean id="FP" class="finance.misc.Exchange" scope="singleton">
+		<property name="exchangeCode" value="FP" />
 		<property name="mic" value="XPAR" />
 		<property name="dateTimeZone" value="Europe/Paris" />
 		<property name="mainTradingCurrency" value="EUR" />
@@ -42,8 +43,115 @@
 		</property>
 
 	</bean>
-	
-	
 
+	<bean id="UA" class="finance.misc.Exchange" scope="singleton">
+		<property name="compositeExchangeCode" value="US" />
+		<property name="exchangeCode" value="UA" />
+		<property name="mic" value="XNAS" />
+		<property name="dateTimeZone" value="America/New_York" />
+		<property name="mainTradingCurrency" value="USD" />
+		<property name="countryIso" value="US" />
+	</bean>
+
+	<bean id="UB" class="finance.misc.Exchange" scope="singleton">
+		<property name="compositeExchangeCode" value="US" />
+		<property name="exchangeCode" value="UB" />
+		<property name="mic" value="XNAS" />
+		<property name="dateTimeZone" value="America/New_York" />
+		<property name="mainTradingCurrency" value="USD" />
+		<property name="countryIso" value="US" />
+	</bean>
+
+
+	<bean id="UC" class="finance.misc.Exchange" scope="singleton">
+		<property name="compositeExchangeCode" value="US" />
+		<property name="exchangeCode" value="UC" />
+		<property name="mic" value="XNAS" />
+		<property name="dateTimeZone" value="America/New_York" />
+		<property name="mainTradingCurrency" value="USD" />
+		<property name="countryIso" value="US" />
+	</bean>
+
+
+	<bean id="UW" class="finance.misc.Exchange" scope="singleton">
+		<property name="compositeExchangeCode" value="US" />
+		<property name="exchangeCode" value="UW" />
+		<property name="mic" value="XNAS" />
+		<property name="dateTimeZone" value="America/New_York" />
+		<property name="mainTradingCurrency" value="USD" />
+		<property name="countryIso" value="US" />
+	</bean>
+
+	<bean id="UV" class="finance.misc.Exchange" scope="singleton">
+		<property name="compositeExchangeCode" value="US" />
+		<property name="exchangeCode" value="UV" />
+		<property name="mic" value="XNAS" />
+		<property name="dateTimeZone" value="America/New_York" />
+		<property name="mainTradingCurrency" value="USD" />
+		<property name="countryIso" value="US" />
+	</bean>
+
+	<bean id="UR" class="finance.misc.Exchange" scope="singleton">
+		<property name="compositeExchangeCode" value="US" />
+		<property name="exchangeCode" value="UR" />
+		<property name="mic" value="XNAS" />
+		<property name="dateTimeZone" value="America/New_York" />
+		<property name="mainTradingCurrency" value="USD" />
+		<property name="countryIso" value="US" />
+	</bean>
+
+	<bean id="UF" class="finance.misc.Exchange" scope="singleton">
+		<property name="compositeExchangeCode" value="US" />
+		<property name="exchangeCode" value="UF" />
+		<property name="mic" value="XNAS" />
+		<property name="dateTimeZone" value="America/New_York" />
+		<property name="mainTradingCurrency" value="USD" />
+		<property name="countryIso" value="US" />
+	</bean>
+
+	<bean id="US" class="finance.misc.Exchange" scope="singleton">
+		<property name="compositeExchangeCode" value="US" />
+		<property name="exchangeCode" value="US" />
+		<property name="mic" value="XNAS" />
+		<property name="dateTimeZone" value="America/New_York" />
+		<property name="mainTradingCurrency" value="USD" />
+		<property name="countryIso" value="US" />
+	</bean>
+
+	<bean id="UP" class="finance.misc.Exchange" scope="singleton">
+		<property name="compositeExchangeCode" value="US" />
+		<property name="exchangeCode" value="UP" />
+		<property name="mic" value="XNAS" />
+		<property name="dateTimeZone" value="America/New_York" />
+		<property name="mainTradingCurrency" value="USD" />
+		<property name="countryIso" value="US" />
+	</bean>
+
+	<bean id="UN" class="finance.misc.Exchange" scope="singleton">
+		<property name="compositeExchangeCode" value="US" />
+		<property name="exchangeCode" value="UN" />
+		<property name="mic" value="XNAS" />
+		<property name="dateTimeZone" value="America/New_York" />
+		<property name="mainTradingCurrency" value="USD" />
+		<property name="countryIso" value="US" />
+	</bean>
+
+	<bean id="UQ" class="finance.misc.Exchange" scope="singleton">
+		<property name="compositeExchangeCode" value="US" />
+		<property name="exchangeCode" value="UQ" />
+		<property name="mic" value="XNAS" />
+		<property name="dateTimeZone" value="America/New_York" />
+		<property name="mainTradingCurrency" value="USD" />
+		<property name="countryIso" value="US" />
+	</bean>
+
+	<bean id="VF" class="finance.misc.Exchange" scope="singleton">
+		<property name="compositeExchangeCode" value="US" />
+		<property name="exchangeCode" value="VF" />
+		<property name="mic" value="XNAS" />
+		<property name="dateTimeZone" value="America/New_York" />
+		<property name="mainTradingCurrency" value="USD" />
+		<property name="countryIso" value="US" />
+	</bean>
 </beans>
 	

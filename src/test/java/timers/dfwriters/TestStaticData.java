@@ -22,6 +22,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
@@ -39,12 +40,13 @@ public class TestStaticData {
 	private String region = "emea";
 	private String index = "SXXP";
 	private String format = "parquet";
+	private boolean replaceWithComposite = false;
 
 	@Before
 	public void setup() throws DataQueryException, DataServiceStartException {
 		requestComposition = new DataRequest.Builder()
 				.dataService(DataServiceEnum.FLAT_FILE)
-				.parameters("filepath","C:\\Users\\admin\\Documents\\workspace\\datalake\\"+format+"\\equity\\"+region+"\\"+index.toLowerCase()+"\\composition")
+				.parameters("filepath","C:\\Users\\admin\\Documents\\workspace\\data\\"+format+"\\equity\\"+region+"\\"+index.toLowerCase()+"\\composition")
 				.parameters("fileformat",format)
 				.instrumentType(InstrumentType.Index)
 				.identifierType(IdentifierType.TICKER)
@@ -52,6 +54,7 @@ public class TestStaticData {
 				.requestType(RequestType.UniverseRequest)
 				.parameters(RequestParameters.startDate, CoreConfig.GLOBAL_START_DATE)
 				.parameters(RequestParameters.endDate,  CoreConfig.GLOBAL_END_DATE)
+				.parameters(RequestParameters.useComposite,replaceWithComposite)
 				.build();
 
 		requestComposition.query();
@@ -83,23 +86,24 @@ public class TestStaticData {
 				.identifierTypes(IdentifierType.TICKER)
 				.spotDataFields(fields)
 				.identifiers(this.requestTechnical.getIdentifiers().stream().map(i -> i.getName()).toArray(String[]::new))
+				.watermark(Duration.ofDays(10))
 				.build();
 
 		sequencer = new TimerStateToDataframe.Builder()
 		.stateCapture(capture)
-		.startDate(CoreConfig.GLOBAL_END_DATE.plusDays(1))
-		.endDate(CoreConfig.GLOBAL_END_DATE.plusDays(1))
+		.startDate(LocalDate.now().plusDays(1))
+		.endDate(LocalDate.now().plusDays(1))
 		.step(Duration.ofDays(1))
 		.build();
 
 		writerBatch = (TimerDataframeWriterBatch) new TimerDataframeWriterBatch.Builder()
 				.dfContainer(capture.getDfContainer())
-				.path("C:\\Users\\admin\\Documents\\workspace\\datalake\\"+format+"\\equity\\"+region+"\\"+index.toLowerCase()+"\\static_data")
-				.format(format)
+				.path("C:\\Users\\admin\\Documents\\workspace\\data\\"+format+"\\equity\\"+region+"\\"+index.toLowerCase()+"\\static_data")
+				.format(this.format)
 				.outputMode("append")
 				.partitionColumns(new String[]{"year"})
-				.startDate(CoreConfig.GLOBAL_END_DATE.plusDays(1))
-				.endDate(CoreConfig.GLOBAL_END_DATE.plusDays(1))
+				.startDate(LocalDate.now().plusDays(1))
+				.endDate(LocalDate.now().plusDays(1))
 				.step(Duration.ofDays(1))
 				.build();
 
