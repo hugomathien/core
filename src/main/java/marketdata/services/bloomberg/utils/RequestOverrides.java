@@ -18,8 +18,8 @@ public enum RequestOverrides {
 	BEST_CONSENSUS_STAT_OVERRIDE,
 	BETA_OVERRIDE_PERIOD,
 	FUND_PER,
-	FILING_STATUS;
-
+	FILING_STATUS,
+	EQY_FUND_CRNCY;
 	private RequestOverrides() {
 		
 	}

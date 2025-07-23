@@ -32,7 +32,18 @@ public class TestBBGReferenceDataRequest {
 		request = new DataRequest.Builder()
 		.dataService(DataServiceEnum.BLOOMBERG)
 		.backfill(false)
-		.fields("PX_LAST","VOLUME","FIELD_EXCEPTION_ERROR")
+		.fields("ISIN",
+				"ID_BB_GLOBAL",
+				"ID_SEDOL1",
+				"ID_BB_COMPANY",
+				"CRNCY",
+				"EXCH_CODE",
+				"INDUSTRY_SECTOR",
+				"INDUSTRY_GROUP",
+				"INDUSTRY_SUBGROUP",
+				"GICS_SECTOR_NAME",
+				"GICS_INDUSTRY_NAME",
+				"COUNTRY_ISO")
 		.identifierType(IdentifierType.TICKER)
 		.identifiers(InstrumentType.SingleStock, new String[]{"TTE FP","VOD LN"})
 		.requestType(RequestType.ReferenceDataRequest)

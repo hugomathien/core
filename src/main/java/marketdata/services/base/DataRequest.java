@@ -4,14 +4,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import marketdata.services.bloomberg.utils.RequestOverrides;
@@ -442,7 +435,7 @@ public class DataRequest implements Sequenceable {
 		}
 
 		public Builder parameters(Map<RequestParameters,Object> parameters) {
-			this.parameters.putAll(parameters);
+			Optional.ofNullable(parameters).ifPresent(this.parameters::putAll);
 			return this;
 		}
 
@@ -457,7 +450,7 @@ public class DataRequest implements Sequenceable {
 		}
 
 		public Builder override(Map<RequestOverrides,Object> overrides) {
-			this.overrides.putAll(overrides);
+			Optional.ofNullable(overrides).ifPresent(this.overrides::putAll);
 			return this;
 		}
 

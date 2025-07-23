@@ -54,8 +54,8 @@ public class TestStocks {
 				"TOT_ANALYST_REC","TOT_BUY_REC","TOT_SELL_REC","TOT_HOLD_REC","EQY_REC_CONS"});
 	}};
 	private String exportFileName = "technical";
-	private String region="amrs";
-	private String index="RAY";
+	private String region="emea";
+	private String index="SXXP";
 	private String format="parquet";
 	private int batchSize = 3000;
 	private boolean replaceWithComposite = false;
@@ -64,7 +64,7 @@ public class TestStocks {
 	public void setup() throws DataQueryException, DataServiceStartException {
 		requestComposition = new DataRequest.Builder()
 				.dataService(DataServiceEnum.FLAT_FILE)
-				.parameters("filepath","C:\\Users\\admin\\Documents\\workspace\\data\\"+format+"\\equity\\"+region+"\\"+index.toLowerCase()+"\\composition")
+				.parameters("filepath","C:\\Users\\hugom\\workspace\\datalake\\"+format+"\\equity\\"+region+"\\"+index.toLowerCase()+"\\composition")
 				.parameters("fileformat",format)
 				.instrumentType(InstrumentType.Index)
 				.identifierType(IdentifierType.TICKER)

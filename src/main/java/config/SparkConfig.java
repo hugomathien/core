@@ -19,7 +19,6 @@ public class SparkConfig {
 	@Bean
 	@Lazy
 	public Spark spark() {
-		System.setProperty("hadoop.home.dir", "C:\\Users\\admin\\apps\\hadoop");
 		Spark spark = new Spark();
 		return spark;
 	}

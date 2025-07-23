@@ -72,7 +72,7 @@ public class TestBatchWriter {
 
 		writerBatch = (TimerDataframeWriterBatch) new TimerDataframeWriterBatch.Builder()
 				.dfContainer(capture.getDfContainer())
-				.path("C:\\Users\\admin\\Downloads\\test.csv")
+				.path("C:\\Users\\hugom\\Downloads\\test.csv")
 				.format("console")
 				.outputMode("append")
 				.queryName("myQuery")

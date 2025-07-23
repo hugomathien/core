@@ -14,8 +14,8 @@
 		<spring-context.version>5.3.12</spring-context.version>
 		<spring-test.version>5.3.12</spring-test.version>
 		<commons-math3.version>3.4.1</commons-math3.version>
-		<blpapi3.version>3.17.1-1</blpapi3.version>
-		<blpapi3-path>C:\Users\admin\.m2\repository\bloomberg\blpapi3\3.17.1-1</blpapi3-path>
+		<blpapi3.version>3.25.4-2</blpapi3.version>
+		<blpapi3-path>C:\Users\hugom\.m2\repository\bloomberg\blpapi3\3.25.4-2</blpapi3-path>
 		<junit.version>4.12</junit.version>
 		<jsch.version>0.1.53</jsch.version>
 		<jackson-core.version>2.6.5</jackson-core.version>
@@ -82,8 +82,6 @@
 					</dependency>
 				</dependencies>
 				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
 					<testFailureIgnore>true</testFailureIgnore>
 					<includes>
 						<include>**/*.java</include>
@@ -117,11 +115,11 @@
 			<version>${commons-math3.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>bloomberg</groupId>
+			<groupId>com.bloomberg</groupId>
 			<artifactId>blpapi3</artifactId>
 			<version>${blpapi3.version}</version>
 			<scope>system</scope>
-			<systemPath>${blpapi3-path}\blpapi-3.17.1-1.jar</systemPath>
+			<systemPath>${blpapi3-path}\blpapi-3.25.4-2.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>

@@ -21,4 +21,4 @@ bloomberg:
 randomgen:
   requestTypes: HistoricalDataRequest,ReferenceDataRequest
 flatfile:
-  requestTypes: IndexCompositionRequest
+  requestTypes: IndexCompositionRequest, HistoricalDataRequest

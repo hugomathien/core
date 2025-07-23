@@ -40,18 +40,19 @@ public class TestDataRequestFunda {
 	@Before
 	public void testDataRequestSequencer() throws TimeoutException, DataServiceStartException, DataQueryException {
 		request = new DataRequest.Builder()
-		.fields("ANNOUNCEMENT_DT","LATEST_PERIOD_END_DT_FULL_RECORD")
+		.fields("LATEST_ANNOUNCEMENT_DT","ANNOUNCEMENT_DT","LATEST_PERIOD_END_DT_FULL_RECORD","TRAILING_12M_SALES_GROWTH")
 		.instrumentType(InstrumentType.SingleStock)
 		.identifierType(IdentifierType.TICKER)
-		.identifiers("TNTRQ US")
+		.identifiers("ASML NA")
 		.backfill(true)
 		.dataService(DataServiceEnum.BLOOMBERG)
 		.requestType(RequestType.HistoricalDataRequest)
 		.parameters(RequestParameters.UseDPDF, true)
-		.parameters(RequestParameters.startDate, CoreConfig.GLOBAL_START_DATE)
-		.parameters(RequestParameters.endDate, CoreConfig.GLOBAL_END_DATE)
+		.parameters(RequestParameters.startDate, LocalDate.of(2010,1,1))
+		.parameters(RequestParameters.endDate, LocalDate.now())
 		.override(RequestOverrides.FUND_PER, "Q")
 		.override(RequestOverrides.FILING_STATUS, "OR")
+		.override(RequestOverrides.EQY_FUND_CRNCY, "USD")
 		.build();
 
 		request.query();
@@ -62,11 +63,11 @@ public class TestDataRequestFunda {
 
 	@Test
 	public void testDataSeriesSize() {
-		IInstrument stock = CoreConfig.services().getInstrument("A US");
+		IInstrument stock = CoreConfig.services().getInstrument("ASML NA");
 		TimeSeries<Instant,Day> ts = stock.getMarketData().getHistorical().getEodData().getTimeSeries();
-		System.out.println("AAPL US Time Series");
+		System.out.println("ASML NA Time Series");
 		ts.printTimeSeries();
-		Assert.assertEquals(33,ts.size());
+		Assert.assertEquals(ts.size(), 67);
 	}
 
 	

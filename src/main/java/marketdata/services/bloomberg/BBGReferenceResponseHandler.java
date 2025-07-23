@@ -7,6 +7,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.Core;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
@@ -257,22 +258,28 @@ public class BBGReferenceResponseHandler extends AbstractResponseHandler<BBGRefe
 							processReferenceDataResponseArray(timestamp,item,request,instrument,field);
 						}
 						else {
-							Object value = field.getValueFromBloombergElement(item);
 
-							marketDataEventFactory.publishToEventQueue(
-									request.isBackfill(),
-									timestamp,
-									MarketDataContainerEnum.SPOT,
-									DataServiceEnum.BLOOMBERG,
-									timestamp,
-									timestamp,
-									instrument,
-									field,
-									value);
+							try {
+								Object value = field.getValueFromBloombergElement(item);
+
+								marketDataEventFactory.publishToEventQueue(
+										request.isBackfill(),
+										timestamp,
+										MarketDataContainerEnum.SPOT,
+										DataServiceEnum.BLOOMBERG,
+										timestamp,
+										timestamp,
+										instrument,
+										field,
+										value);
+							}
+							catch (Exception e) {
+								CoreConfig.logger.log(Level.ERROR,"Field Error " + field.toString() + " " +e.toString());
+							}
 						}
 					}
 					catch(Exception e) {
-						System.out.println(e.toString());
+						CoreConfig.logger.log(Level.ERROR,e.toString());
 					}
 				}
 			}

@@ -2,7 +2,6 @@ package config;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.Map;
 
 import event.timers.TimerDataframeWriterBatch;
 import event.timers.TimerDataframeWriterStream;
@@ -10,7 +9,6 @@ import event.timers.Clock;
 import event.timers.TimerDataRequest;
 import event.timers.TimerStateToDataframe;
 import finance.misc.ExchangeFactory;
-import marketdata.field.FieldConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.spark.sql.SparkSession;
@@ -40,11 +38,13 @@ import marketdata.services.bloomberg.BBGRealTimeResponseHandler;
 import marketdata.services.bloomberg.BBGReferenceResponseHandler;
 import marketdata.services.randomgen.RandomGeneratorReferenceDataService;
 import marketdata.services.randomgen.RandomGeneratorReferenceResponseHandler;
+import marketdata.services.flatfile.FlatFileReferenceDataService;
+import marketdata.services.flatfile.FlatFileReferenceResponseHandler;
 import utils.Spark;
 
 @Configuration
 @ImportResource({"${config.core}"})
-@Import({FlatFileDataConfig.class,SparkConfig.class, FieldConfig.class})
+@Import({SparkConfig.class, FieldConfig.class})
 @ComponentScan(basePackages = {
 		"event.events",
 		"event.processing",
@@ -53,7 +53,10 @@ import utils.Spark;
 		"finance.misc",
 		"finance.instruments",
 		"marketdata.field",
-		"marketdata.services"})
+		"marketdata.services",
+		"marketdata.services.bloomberg",
+		"marketdata.services.flatfile",
+		"marketdata.services.randomgen"})
 public class CoreConfig implements ApplicationContextAware {
 	public static ApplicationContext ctx;
 	public static IdentifierType PRIMARY_IDENTIFIER_TYPE;
@@ -218,7 +221,14 @@ public class CoreConfig implements ApplicationContextAware {
 	public BBGRealTimeResponseHandler bloombergRealTimeResponseHandler() {
 		return ctx.getBean(BBGRealTimeResponseHandler.class);
 	}
-	
+
+	public FlatFileReferenceDataService flatFileReferenceDataService() {
+		return ctx.getBean(FlatFileReferenceDataService.class);
+	}
+	public FlatFileReferenceResponseHandler flatFileReferenceResponseHandler() {
+		return ctx.getBean(FlatFileReferenceResponseHandler.class);
+	}
+
 	@Value("${config.clock.startDate}")
 	public void setGlobalStartDate(String startDate) {
 		GLOBAL_START_DATE = LocalDate.parse(startDate);

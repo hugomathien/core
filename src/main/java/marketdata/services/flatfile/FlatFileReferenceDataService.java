@@ -20,6 +20,7 @@ import java.time.LocalDate;
 @Lazy(true)
 public class FlatFileReferenceDataService extends FlatFileService  implements IReferenceDataService  {
     @Autowired
+    @Lazy
     private Spark spark;
     @Autowired
     private FlatFileReferenceResponseHandler responseHandler;

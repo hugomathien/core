@@ -1,4 +1,4 @@
-package marketdata.field;
+package config;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -10,23 +10,22 @@ import java.util.List;
 
 import javax.annotation.PostConstruct;
 
+import marketdata.field.Field;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.Resource;
-import org.springframework.stereotype.Component;
 
-import config.CoreConfig;
 import finance.misc.TradingPhaseEnum;
 import marketdata.services.base.DataServiceEnum;
 
-@Component
+@Configuration
 @Lazy(false)
 public class FieldConfig {
 	@Value("${config.fieldmapper}")
 	private Resource resourceFile;
-	private HashMap<DataServiceEnum,HashMap<String,Field>> serviceFieldMap;
+	private HashMap<DataServiceEnum,HashMap<String, Field>> serviceFieldMap;
 	
 	public FieldConfig() {
 		this.serviceFieldMap = new HashMap<DataServiceEnum,HashMap<String,Field>>();
